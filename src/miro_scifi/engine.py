@@ -167,7 +167,31 @@ class _BaseLiveJSONEngine:
             ]
         )
         raw_text = normalize_content(getattr(response, "content", response))
-        return parse_json_response(model_cls, raw_text)
+        try:
+            return parse_json_response(model_cls, raw_text)
+        except Exception:
+            repaired = self.repair_json(model_cls=model_cls, broken_text=raw_text)
+            return parse_json_response(model_cls, repaired)
+
+    def repair_json(self, *, model_cls: type[ModelT], broken_text: str) -> str:
+        repair_response = self._chat_model.invoke(
+            [
+                SystemMessage(
+                    content=(
+                        "你是一个 JSON 修复器。你的唯一任务是把用户给出的近似 JSON 文本修复成合法 JSON。\n"
+                        "不要改写语义，不要补充解释，不要输出代码块，只输出修复后的 JSON 对象。\n"
+                        f"{build_json_instruction(model_cls)}"
+                    )
+                ),
+                HumanMessage(
+                    content=(
+                        "请修复下面这段不合法 JSON，使其能被标准 JSON 解析器读取：\n"
+                        f"{broken_text}"
+                    )
+                ),
+            ]
+        )
+        return normalize_content(getattr(repair_response, "content", repair_response))
 
 
 @dataclass

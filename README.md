@@ -108,3 +108,22 @@ uv run python -m miro_scifi.one_shot_novel --max-chapters 1
 ```
 
 如果你只是想尽快产出一版长篇草稿，优先用 `one_shot_novel`；如果你要验证多节点架构，再用 `novel_runner`。
+
+## `novel_runner` 新 idea
+
+- `echo_tax`：原始的《回声税》长篇方案。
+- `cry_guarantee`：新的《哭声担保》方案，聚焦“公开哀悼权”的抵押与静音处理。
+
+示例：
+
+```bash
+uv run python -m miro_scifi.novel_runner --mode live --idea cry_guarantee --max-scenes 2
+```
+
+续跑示例：
+
+```bash
+uv run python -m miro_scifi.novel_runner --mode live --idea cry_guarantee --start-scene 3 --max-scenes 1
+```
+
+如果 `states_dir` 里已经有前一场的 `scene_XX.json`，runner 会自动续接资源状态、关系标签和锚点。
