@@ -289,6 +289,118 @@ def build_mock_character_action(profile: CharacterProfile, state: SceneState) ->
     brief = state.get("scene_brief", "")
     location = state.get("current_location", "")
     is_miner = profile.name == "阮宁"
+    is_earth = profile.name == "沈竟"
+    is_jupiter = profile.name == "韩漠"
+
+    if "四十分钟旧闻" in brief or "主权协调厅" in brief or "旧闻" in brief:
+        if is_earth:
+            return AgentAction(
+                observation_analysis="他眼前这段港务局画面已经晚了四十分钟，这意味着自己现在做的不是指挥现场，而是在替一个已经过去的局面补写法统。",
+                emotional_shift="太阳穴被同步厅的冷光顶得发紧，他明明坐着，却像一直悬在一段来不及落地的命令上。",
+                hidden_agenda="先把地球的合法性和接管姿态发出去，即使它抵达时现场早已换了主人。",
+                micro_expression="他盯着延迟图看了两秒，手指在发送键上方停住，又像怕别人看出迟疑一样压了下去。",
+                action_and_dialogue="他把接管草案推上主屏：‘先发紧急维稳令，要求木卫三港务局冻结装卸、保护结算节点，并向地球回传完整伤亡名录。’",
+                transmission_target="韩漠",
+                transmission_content="地球主权协调局下达紧急维稳令：冻结港口、等待地球接管小组、不得擅自改动结算和安保权限。",
+            )
+        if is_jupiter:
+            return AgentAction(
+                observation_analysis="地球那边还没看见现在的码头，他真正拥有的是这一段没人能及时纠正的现时。",
+                emotional_shift="舱壁传来的低鸣让他胸口更稳，不是轻松，而是那种终于比中心先活在现实里的冷静。",
+                hidden_agenda="在地球回波抵达前把港口调度权和本地治安权收拢成既成事实。",
+                micro_expression="他把港口舱图放大时眼皮几乎没动，只在民兵驻点那一格停得稍微久了一点。",
+                action_and_dialogue="他对值班组说：‘先封锁外环装卸臂，把结算主机迁进民兵看守区。地球要发话，等它的话飞到这里再说。’",
+                transmission_target="沈竟",
+                transmission_content="木卫三局势已进入本地紧急状态。我将先行接管港口调度与结算主机，稍后补发说明。",
+            )
+
+    if "镇压指令在途" in brief or "接管命令" in brief or "盲区" in brief:
+        if is_earth:
+            return AgentAction(
+                observation_analysis="命令已经在路上，自己能做的却只是继续往一段旧现实上加注，这让主权越来越像一种延迟播出的语音。",
+                emotional_shift="他喉咙里有点发干，像刚吞下一口还没来得及发热的金属。",
+                hidden_agenda="用更重的条款把地球的权力感补回去，至少让回波抵达时还能像命令。",
+                micro_expression="他把第二版文书里的‘临时军事接管’几个字加粗，又迅速把手从屏幕上收开。",
+                action_and_dialogue="他追加签注：‘若木卫三未按令冻结港口，则视为对地球法统的拒绝执行，后续一切结算免责由本地主官承担。’",
+                transmission_target="韩漠",
+                transmission_content="追加指令：若你拒绝冻结港口并等待接管，即构成对地球法统的公开违逆，相关责任由你本人承担。",
+            )
+        if is_jupiter:
+            return AgentAction(
+                observation_analysis="来自地球的沉默本身就是窗口：越久没有回波，本地工会和民兵越相信必须先听见自己人的命令。",
+                emotional_shift="他不觉得热，只有一种被真空磨薄后的清醒，像每个决定都在替自己提前切断退路。",
+                hidden_agenda="趁地球命令仍在路上，把港口、配给和保险切换到本地规程。",
+                micro_expression="他把港务章印在三份纸质授权上盖下去时，手腕稳得像练过一样。",
+                action_and_dialogue="他对工会代表说：‘今天开始，木卫三的补给优先序列由本地议事厅签字。地球的命令如果晚到，只能算意见。’",
+                transmission_target="沈竟",
+                transmission_content="木卫三已按本地紧急条例接管港口与补给顺位。等待地球批准会先让人饿死。",
+            )
+
+    if "五秒期货" in brief or "中继站" in brief or "保险价格" in brief:
+        if is_earth:
+            return AgentAction(
+                observation_analysis="市场总比公文更早收到未来，说明自己维护的不是现实，而是被交易系统不断提前榨干的合法性尾声。",
+                emotional_shift="他盯着保险曲线往上拱时，眼底那点疲惫像被突然擦亮，变成更难看的冷意。",
+                hidden_agenda="先冻结木星圈相关结算，别让价格走势替木卫三宣布独立已成事实。",
+                micro_expression="他把手背压在桌沿，像在用那点硬度把自己钉回仍可命令的位置。",
+                action_and_dialogue="他对金融联络官说：‘先暂停木星航道保险的地球清算通道，别让价格比法令更早给出政治答案。’",
+                transmission_target="韩漠",
+                transmission_content="地球将暂停木星圈部分清算通道。任何试图利用价格波动固化本地接管的行为，都将被视作叛离法统。",
+            )
+        if is_jupiter:
+            return AgentAction(
+                observation_analysis="当氧气、保险和航道保证金先于法令涨跌时，真正宣布现实的人就不再是部长，而是更靠近信号源的报价器。",
+                emotional_shift="他看着中继站提前回来的价格，胃里反而轻了一点，像终于有东西比地球的回波更愿意站在自己这边。",
+                hidden_agenda="把市场对既成事实的押注继续做大，让地球即使想撤回也买不起。",
+                micro_expression="他把一份本地结算备忘录折起一角，塞进工会代表手里时动作很小，像只是在递一张过时的收据。",
+                action_and_dialogue="他低声说：‘把本地结算折扣放出去。谁先按木卫三规程成交，谁就先收到明天。’",
+                transmission_target="沈竟",
+                transmission_content="你们的法令还在路上，但市场已经开始按木卫三的明天定价。",
+            )
+
+    if "回波戒严" in brief or "戒严" in brief:
+        if is_earth:
+            return AgentAction(
+                observation_analysis="当镇压令终于抵达，却只成为现场众多声音里最晚的一条，法统被证明首先输给了传播速度。",
+                emotional_shift="他肩背没有垮，只是那种长期训练出的官样平稳里忽然掺进一丝被迫承认迟到的钝痛。",
+                hidden_agenda="即使抢不回现场，也要把木卫三的既成事实写成程序违规，为地球保住追认或追责的空间。",
+                micro_expression="他把屏幕上的‘拒不执行’标红，眼睛却短暂地离开了那行字，像不想承认它此刻毫无重量。",
+                action_and_dialogue="他冷声记录：‘木卫三已在未经地球批准的情况下实施本地戒严与港口接管，相关状态暂记为非法既成事实。’",
+                transmission_target="韩漠",
+                transmission_content="地球确认你已构成非法既成事实。你现在拥有的不是合法权力，只是一段尚未被追究的延迟。",
+            )
+        if is_jupiter:
+            return AgentAction(
+                observation_analysis="迟到的镇压令只要无法反转码头上的签字和枪口，就只能替自己证明中心确实已经晚了。",
+                emotional_shift="他没有兴奋，只觉得舱内空气比刚才更薄，像一切胜利都需要立刻拿更多现实去压住。",
+                hidden_agenda="把地球的迟到命令公开成反面证据，让更多本地人相信他们已经不必等。",
+                micro_expression="他把收到的镇压令投在公共墙屏上，嘴角没有起伏，只是让那串时间戳自己说话。",
+                action_and_dialogue="他对议事厅说：‘看清楚，地球现在才抵达四十分钟前的港口。我们要是还等它，就只配统治自己的过去。’",
+                transmission_target="沈竟",
+                transmission_content="你的命令已公开展示给议事厅。它证明的不是统治，而是地球在木卫三只能收到自己的过去。",
+            )
+
+    if "光锥盲区" in brief or "谈判" in brief or "第五章" in brief:
+        if is_earth:
+            return AgentAction(
+                observation_analysis="他永远收不到韩漠此刻的表情，因此所谓谈判不过是在两段过去之间挑一个损失更小的版本存档。",
+                emotional_shift="他说话仍然平，可胸口像压着一张不断失效的主权地图，每一秒都在变旧。",
+                hidden_agenda="保住地球对木星圈的最低名义与结算接口，别让分裂被一次性说死。",
+                micro_expression="他在停顿里把指尖从桌面边缘挪开，像怕自己碰碎那点还剩的程序体面。",
+                action_and_dialogue="他对迟到的通讯链路说：‘地球可以暂不派接管舰队，但木卫三必须承认航道法统仍由地球备案。名义先留下，事实以后再谈。’",
+                transmission_target="韩漠",
+                transmission_content="地球愿意接受木卫三的临时自治现实，但要求保留航道法统备案权与部分清算名义。",
+            )
+        if is_jupiter:
+            return AgentAction(
+                observation_analysis="沈竟真正想保住的不是现场，而是名义；这说明中心已经接受自己拿不到此刻，只能要求在文件上活下去。",
+                emotional_shift="他听完那段旧了四十分钟的声音，后槽牙才很轻地咬紧一下，像在给已经到手的现实再加一道锁。",
+                hidden_agenda="让木卫三的自治先被地球语言被动承认，再把名义上的让步压到最低。",
+                micro_expression="他没有立刻回话，只抬手把公共时延图上的地球坐标关掉，屏幕顿时暗了一格。",
+                action_and_dialogue="他平声回复：‘木卫三可以把部分备案名称留给地球，但港口、民兵和结算顺位不会再等地球批准。我们只接受已经发生的法。’",
+                transmission_target="沈竟",
+                transmission_content="木卫三接受最低限度的名义备案交换，但港口、民兵与结算现实不再等待地球批准。",
+            )
 
     if "续租窗口" in brief or "深睡期" in brief:
         if is_miner:
@@ -368,7 +480,7 @@ def build_mock_character_action(profile: CharacterProfile, state: SceneState) ->
                 action_and_dialogue="她盯着协议最后一栏：‘签完这个，我以后连梦见她一次都得算违约，是吧？那你写清楚，再把供氧给我续到明晚。’",
             )
         return AgentAction(
-            observation_analysis="她问的不是价钱，而是违约定义，说明她知道自己已经没有讨价还价的空间，只剩确认损失边界。",
+            observation_analysis="她问的不是价钱，而是违约定义，说明她已经没有讨价还价的空间，只剩确认损失边界。",
             emotional_shift="他听见自己把条款念得很稳，稳得像那只裂了口的杯子一直没有继续裂下去。",
             hidden_agenda="完成最终签注，把人和责任一并推回系统流程里。",
             micro_expression="他念条款时拇指在杯沿细裂上停了一瞬，又像什么都没碰到一样松开。",
@@ -379,77 +491,66 @@ def build_mock_character_action(profile: CharacterProfile, state: SceneState) ->
 
 
 class MockCharacterEngine:
-    def __init__(self) -> None:
-        self._script = {
-            "阮宁": [
-                AgentAction(
-                    observation_analysis="裴崧连一句安抚性的废话都没有，说明他已经把自己缩成流程接口，只认曲线不认人。",
-                    emotional_shift="胃里像被空针头轻轻刮了一下，她明明困得发冷，却被债务提醒顶得太阳穴发胀。",
-                    hidden_agenda="先逼出一个能谈价的缝，再把账户风险压到今晚之后。",
-                    micro_expression="她说话前先把袖口往下一扯，拇指在疤痕边缘停了一瞬，像在确认自己还没抖出来。",
-                    action_and_dialogue="她靠近采样台，压低嗓子：‘我按时来了。昨晚那批悲伤样本，你们系统又压价了，是吧？’",
-                ),
-                AgentAction(
-                    observation_analysis="他把‘流程’两个字说得太顺，像是在提醒她，自己连讨价还价都得借用系统的语法。",
-                    emotional_shift="后颈接口一阵发热，她想把桌上的终端掀翻，最后只是把牙关咬得更紧。",
-                    hidden_agenda="尽快让复核落地，哪怕丢掉一点体面，也不能让窗口在自己手里超时。",
-                    micro_expression="她下巴抬了半寸，嘴角却没有跟上去，眼神只在那只裂了口的保温杯上扫了一下。",
-                    action_and_dialogue="她把指尖按在冰凉台面上：‘要复核就快点。我后面还有一班清洗工，没空陪你们等系统心情。’",
-                ),
-                AgentAction(
-                    observation_analysis="确认单上多出来的异常标签不是备注，是提醒她谁能决定她明天还能不能登录。",
-                    emotional_shift="胸口那股要顶出来的火忽然塌下去，剩下一种更省力的麻木，像身体已经替她把屈辱消化过一遍。",
-                    hidden_agenda="签字保账户，先把母亲的贴片额度保住，其余的账以后再算。",
-                    micro_expression="她低头时喉结轻轻动了一下，拇指在发炎的接口周围压了压，像按住一阵想吐的反胃。",
-                    action_and_dialogue="她把确认单拖到面前，签名写得很快：‘行，我签。异常标签你写清楚，别连我的账户一起埋进去。’",
-                ),
-            ],
-            "裴崧": [
-                AgentAction(
-                    observation_analysis="阮宁先谈压价而不是哀求，说明她还有一点余量；真正危险的是这种还撑着格式感的底层样本。",
-                    emotional_shift="他并不烦躁，只是眼底像被终端光线磨得更冷，连杯口的裂纹都懒得再转开。",
-                    hidden_agenda="把她压回可结算区间，同时避免自己背上放行高波动样本的责任。",
-                    micro_expression="他抬手调曲线时停了两秒，像在给系统、也给自己找一个足够干净的措辞。",
-                    action_and_dialogue="他把她的样本图拉到半空，语气平得像播报天气：‘压价是市场波动。你昨晚的悲伤样本纯度不够，系统只按规则结算。’",
-                ),
-                AgentAction(
-                    observation_analysis="她开始催时间，说明真正要命的不是尊严，是窗口背后的某笔账；这让她更容易被迫配合。",
-                    emotional_shift="配额红线在终端角落闪了一下，他肩背没有动，手心却因为空调太冷而有点发干。",
-                    hidden_agenda="让她在时限内自愿接受异常标签，好把自己的纪律风险留在阈值之下。",
-                    micro_expression="他把保温杯往旁边推开半寸，指腹在杯沿那道细裂上蹭了一下，很快又收回。",
-                    action_and_dialogue="他切到人工签注页：‘流程快慢取决于你的样本稳定性，不取决于你的排班。保持平静，对你更划算。’",
-                ),
-                AgentAction(
-                    observation_analysis="她最后还是签了，说明系统判断是对的：多数人不是不能反抗，而是反抗成本太贵。",
-                    emotional_shift="他说话时依旧平稳，只是那种熟悉的职业安全感里掺进一丝很快被压平的异物感。",
-                    hidden_agenda="完成签注、切断个人责任，并让自己看起来依然只是中性的执行者。",
-                    micro_expression="他把确认单推回去时动作标准得近乎礼貌，眼睛却没有真正落在她脸上。",
-                    action_and_dialogue="他在终端补了一条备注：‘备注我会写明。至于冻结与否，由上层风控判断，不由我决定。’",
-                ),
-            ],
-        }
-
     def invoke(self, *, profile: CharacterProfile, state: SceneState) -> AgentAction:
-        contextual = build_mock_character_action(profile, state)
-        if contextual is not None:
-            return contextual
-        round_index = state["turn_count"]
-        scripted_turns = self._script[profile.name]
-        return scripted_turns[min(round_index, len(scripted_turns) - 1)]
+        action = build_mock_character_action(profile, state)
+        if action is not None:
+            return action
+        return AgentAction(
+            observation_analysis="他从对方的停顿和流程提示里确认，眼前这一轮谈话不会带来善意，只会继续压缩可选择的余地。",
+            emotional_shift="身体已经先于语言进入紧绷状态，像在等一张迟早要落下来的罚单。",
+            hidden_agenda="在不彻底失去主动权的前提下，尽量把当前损失推迟到下一轮。",
+            micro_expression="他把视线从屏幕角落挪开时停了一瞬，又很快恢复成一副没事的样子。",
+            action_and_dialogue="他压低声音，把条件往现实的一侧推了一寸：‘先把能确认的部分落下来，剩下的账以后再算。’",
+        )
 
 
 def _infer_mock_opening(scene_brief: str, state: SceneState) -> tuple[str, str, str, str]:
     previous_time = state.get("time_marker") or "凌晨四点十二分"
     previous_location = state.get("current_location") or "雾港第七码头的情绪采样站担保窗口"
-    if not state.get("chapter_history"):
+    if "四十分钟旧闻" in scene_brief or "木卫三" in scene_brief or "主权协调厅" in scene_brief:
         return (
-            "retain",
-            "这是小说开场，时间与空间自然从同一窗口起步。",
-            "凌晨四点十二分",
-            "雾港第七码头的情绪采样站担保窗口",
+            "retain" if not state.get("chapter_history") else "shift",
+            "这是信息延迟政治的开端，故事必须明确把人物钉在彼此错开的现在里。",
+            "地球标准时 07:40",
+            "地球同步轨道主权协调厅",
         )
-
     keyword_map = [
+        (
+            ("镇压指令在途",),
+            (
+                "shift",
+                "视角切到木卫三，让地球命令在飞行途中继续变旧。",
+                "木卫三地方时 08:20",
+                "木卫三外环港务调度室",
+            ),
+        ),
+        (
+            ("五秒期货", "中继站", "保险价格"),
+            (
+                "shift",
+                "故事进入‘谁更早收到未来’的市场维度。",
+                "木星结算时 08:27",
+                "木星信号中继站的结算舱",
+            ),
+        ),
+        (
+            ("回波戒严", "戒严"),
+            (
+                "shift",
+                "让迟到的法令和已经落地的事实在同一地点相撞。",
+                "木卫三地方时 09:05",
+                "木卫三公共议事厅",
+            ),
+        ),
+        (
+            ("光锥盲区", "谈判"),
+            (
+                "shift",
+                "结尾要回到跨光程谈判，强调双方永远拿不到同一个现在。",
+                "地球标准时 11:10",
+                "地球-木卫三延迟谈判链路的录音室",
+            ),
+        ),
         (
             ("拆梦工位", "黑市", "下城", "地下", "回收站"),
             (
@@ -507,29 +608,47 @@ def _infer_mock_opening(scene_brief: str, state: SceneState) -> tuple[str, str, 
     )
 
 
+
 def _build_mock_beats(scene_brief: str, max_turns: int) -> list[dict[str, str | int]]:
-    beat_templates = [
-        (
-            "先把局面推成倒计时",
-            "系统弹出新的时限提醒，明确告诉角色他们正在失去最后的缓冲层。",
-            "所有说话都必须更快、更短、更伤体面。",
-        ),
-        (
-            "把私人处境升级为制度红线",
-            "上级流程或风险指标介入，证明这已经不是两个人之间的谈判。",
-            "双方都更不可能退让，只能把代价向对方或向自己身上继续压。",
-        ),
-        (
-            "用文书或程序完成一次不可逆收束",
-            "系统要求现场确认、签注、上传或交割某项不能撤回的内容。",
-            "角色必须丢掉某样东西，才能把眼前这一段时间暂时续上。",
-        ),
-    ]
+    if any(token in scene_brief for token in ["旧闻", "盲区", "期货", "回波", "光锥"]):
+        beat_templates = [
+            (
+                "把一条旧消息变成新的政治现实",
+                "一段已经过时的情报被迫充当最新依据。",
+                "角色必须根据别处已经过去的事实，替自己当前的处境下注。",
+            ),
+            (
+                "让市场或法令先一步宣布未来",
+                "报价、保险、戒严令或接管令在不同地点以不同时间到达。",
+                "谁更早收到数据，谁就更先把它写成现实。",
+            ),
+            (
+                "用迟到的回波完成一次不可逆收束",
+                "某条命令或回复终于抵达，但现场已经被另一套事实占住。",
+                "角色只能在保全名义和保全现实之间选一个更冷的版本。",
+            ),
+        ]
+    else:
+        beat_templates = [
+            (
+                "先把局面推成倒计时",
+                "系统弹出新的时限提醒，明确告诉角色他们正在失去最后的缓冲层。",
+                "所有说话都必须更快、更短、更伤体面。",
+            ),
+            (
+                "把私人处境升级为制度红线",
+                "上级流程或风险指标介入，证明这已经不是两个人之间的谈判。",
+                "双方都更不可能退让，只能把代价向对方或向自己身上继续压。",
+            ),
+            (
+                "用文书或程序完成一次不可逆收束",
+                "系统要求现场确认、签注、上传或交割某项不能撤回的内容。",
+                "角色必须丢掉某样东西，才能把眼前这一段时间暂时续上。",
+            ),
+        ]
     beats: list[dict[str, str | int]] = []
     for index in range(1, max_turns + 1):
-        dramatic_function, forced_event, target_shift = beat_templates[
-            min(index - 1, len(beat_templates) - 1)
-        ]
+        dramatic_function, forced_event, target_shift = beat_templates[min(index - 1, len(beat_templates) - 1)]
         beats.append(
             {
                 "round_index": index,
@@ -539,6 +658,7 @@ def _build_mock_beats(scene_brief: str, max_turns: int) -> list[dict[str, str | 
             }
         )
     return beats
+
 
 
 class MockShowrunnerEngine:
@@ -555,6 +675,20 @@ class MockShowrunnerEngine:
             scene_brief,
             state,
         )
+        if any(token in scene_brief for token in ["旧闻", "盲区", "期货", "回波", "光锥", "木卫三"]):
+            return ShowrunnerPlan(
+                scene_brief=scene_brief,
+                scene_purpose="把一场政治决策写成迟到信息怎样逼着人用过时现实下注。",
+                target_ending="至少一方把尚未抵达的命令、尚未确认的市场或尚未同步的合法性，提前写成了无法回收的现实。",
+                core_conflict="地球试图用迟到的法统覆盖木星圈已经发生的事实；木卫三则要在回波到达前把自治做成既成事实。",
+                hidden_foreshadowing="时延图上的闪烁坐标和一条迟到的语音回波，会反复提醒所有人：他们从未活在同一个现在。",
+                tone_guardrail="不要写英雄主义，不要写宏大战争快感，只写延迟如何把法律、市场和命令一寸寸拆开。",
+                continuity_mode=continuity_mode,
+                continuity_rationale=rationale,
+                opening_time_marker=opening_time,
+                opening_location=opening_location,
+                forced_beats=_build_mock_beats(scene_brief, max_turns),
+            )
         return ShowrunnerPlan(
             scene_brief=scene_brief,
             scene_purpose="把场景写成角色在制度压力下继续折损自我，而不是重新开一个开场。",
@@ -617,6 +751,41 @@ class MockSymbolismEngine:
 def _infer_mock_ending(scene_brief: str, state: SceneState) -> tuple[str, str, str, str]:
     opening_time = state.get("time_marker") or "凌晨四点十二分"
     opening_location = state.get("current_location") or "雾港第七码头的情绪采样站担保窗口"
+    if "四十分钟旧闻" in scene_brief or "主权协调厅" in scene_brief:
+        return (
+            opening_time,
+            opening_location,
+            "地球标准时 07:48",
+            "地球同步轨道主权协调厅的延迟图前",
+        )
+    if "镇压指令在途" in scene_brief:
+        return (
+            opening_time,
+            opening_location,
+            "木卫三地方时 08:34",
+            "木卫三外环港务调度室外的低重力走廊",
+        )
+    if "五秒期货" in scene_brief:
+        return (
+            opening_time,
+            opening_location,
+            "木星结算时 08:33",
+            "木星信号中继站的结算舱门口",
+        )
+    if "回波戒严" in scene_brief:
+        return (
+            opening_time,
+            opening_location,
+            "木卫三地方时 09:16",
+            "木卫三公共议事厅外的戒严通道",
+        )
+    if "光锥盲区" in scene_brief or "谈判" in scene_brief:
+        return (
+            opening_time,
+            opening_location,
+            "地球标准时 11:26",
+            "地球-木卫三延迟谈判链路的回放室外",
+        )
     if not state.get("chapter_history"):
         return (
             opening_time,
@@ -660,6 +829,7 @@ def _infer_mock_ending(scene_brief: str, state: SceneState) -> tuple[str, str, s
     )
 
 
+
 class MockContinuityEngine:
     def summarize(self, *, scene_data: str, state: SceneState) -> ContinuitySummary:
         opening_time, opening_location, ending_time, ending_location = _infer_mock_ending(
@@ -696,5 +866,5 @@ class MockContinuityEngine:
             irreversible_change="至少一项体面、权利、岗位安全感或情绪所有权已经被正式折损，无法完整回收。",
             carryover_threads=carryover_threads,
             resolved_threads=resolved_threads,
-            next_scene_pressure="系统不会撤回本场后果；下一场只会让它们在新的地点或更晚的时间里继续发作。",
+            next_scene_pressure=("下一场只会让这些后果在新的地点或更晚的时间里继续发作。" if state.get("communication_mode") != "delayed_inbox" else "下一场里，仍在路上的旧命令和更早落地的新事实会继续互相错开。"),
         )

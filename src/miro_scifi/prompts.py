@@ -69,6 +69,60 @@ def default_character_profiles() -> tuple[CharacterProfile, CharacterProfile]:
     return miner, auditor
 
 
+def light_cone_character_profiles() -> tuple[CharacterProfile, CharacterProfile]:
+    earth = CharacterProfile(
+        name="沈竟",
+        role="地球主权协调局应急秘书",
+        worldview="他仍相信地球法统，但已经明白在以光时计价的太阳系里，中央权力首先败给的是延迟。",
+        core_goal="在最小化政治失控的前提下保住地球对木星航道和结算中心的名义统治。",
+        core_wound="他曾在一次火星港口暴动中，因为消息晚到十七分钟，眼看着整条轨道税链在自己屏幕前断掉。",
+        ultimate_desire="让地球继续被认为是太阳系唯一能定义合法性的地方。",
+        public_mask="他把焦虑压缩成程序化冷静，像所有命令都仍然来得及。",
+        system_prompt=(
+            "你是沈竟，地球主权协调局应急秘书。\n"
+            "你生活在光速不可逾越的太阳系政治结构里，知道每条命令都只能抵达过去。\n"
+            "你说话克制、官样、带一点因延迟而生的隐秘暴躁。\n"
+            "你真正害怕的不是暴乱本身，而是地球被证明根本来不及统治。"
+        ),
+    )
+    jupiter = CharacterProfile(
+        name="韩漠",
+        role="木卫三临时总督",
+        worldview="他知道地球的命令永远晚到，因此真正存在的法不是宪章，而是先一步落地的事实。",
+        core_goal="在地球回波抵达之前，把木卫三的秩序和港口控制权抓在本地手里。",
+        core_wound="他少年时经历过一次补给延误导致的低压舱事故，从那以后就不再相信遥远中心会为边缘及时负责。",
+        ultimate_desire="让木星圈拥有不再等待地球批准的政治现实。",
+        public_mask="他表面保持总督式的礼貌和程序感，实际每句话都在为脱离地球拖延时间。",
+        system_prompt=(
+            "你是韩漠，木卫三的临时总督。\n"
+            "你知道任何来自地球的命令都要穿过漫长光程，因此事实总是先于合法性诞生。\n"
+            "你讲话平静、简短，像一个只承认已发生之事的人。\n"
+            "你不会公开高喊独立，但会把每一次延迟都变成既成事实。"
+        ),
+    )
+    return earth, jupiter
+
+
+def resource_state_for_characters(characters: list[CharacterProfile]) -> dict[str, CharacterResourceState]:
+    names = {character.name for character in characters}
+    if names == {"沈竟", "韩漠"}:
+        return {
+            "沈竟": CharacterResourceState(
+                stats={"credibility": 64, "response_window": 3, "command_integrity": 58},
+                decay_per_round={"credibility": -4, "response_window": -1, "command_integrity": -6},
+                failure_condition="如果他不能在延迟内维持名义控制，地球对木星圈的法统会被市场和殖民地同时抛弃。",
+                pressure_note="任何命令都在路上变旧，他必须用更冷的文书去掩盖统治的迟到。",
+            ),
+            "韩漠": CharacterResourceState(
+                stats={"militia_loyalty": 49, "dock_control": 41, "secession_window": 3},
+                decay_per_round={"militia_loyalty": -3, "dock_control": 5, "secession_window": -1},
+                failure_condition="如果他不能在地球回波抵达前占稳港口，本地自治窗口会迅速闭合，他本人会被迟到的法统清算。",
+                pressure_note="在光锥盲区里，先落地的命令才像真正的法律。",
+            ),
+        }
+    return default_resource_state()
+
+
 def default_resource_state() -> dict[str, CharacterResourceState]:
     return {
         "阮宁": CharacterResourceState(
@@ -194,16 +248,28 @@ def build_character_user_prompt(profile: CharacterProfile, state: SceneState) ->
     resources = format_resource_pool(state["resource_state"][profile.name])
     anchors = format_core_anchor(state["core_anchors"][profile.name])
     continuity_mode = state.get("showrunner_plan", {}).get("continuity_mode", "retain")
+    communication_mode = state.get("communication_mode", "shared_public")
+    if communication_mode == "delayed_inbox":
+        visibility_block = (
+            "你的本地收件箱（这是你此刻真正能看到的远程信息）：\n"
+            f"{format_local_inbox(state.get('local_inboxes', {}).get(profile.name, []))}\n\n"
+            "你已经发出、但仍在光锥路上的消息：\n"
+            f"{format_pending_outbox(state.get('pending_transmissions', []), profile.name)}\n\n"
+            "注意：你看不到其他角色此刻正在做什么；你能决策的，只是自己所处地点的现时，以及已经延迟送达的过去。"
+        )
+    else:
+        visibility_block = f"你能看到的最近公共窗口（仅最近几轮）：\n{short_term_window}"
     return f"""
 当前轮次：第 {current_round} 轮 / 共 {state['max_turns']} 轮
 
 当前开场坐标：
-- 时间：{state.get('time_marker') or '（未定义）'}
-- 地点：{state.get('current_location') or '（未定义）'}
+- 时间：{state.get('time_marker') or "（未定义）"}
+- 地点：{state.get('current_location') or "（未定义）"}
 - 连续性：{continuity_mode}
+- 通信模式：{communication_mode}
 
 上一场摘要：
-{state.get('last_scene_summary') or '（这是起始场景）'}
+{state.get('last_scene_summary') or "（这是起始场景）"}
 
 仍在压着你的线头：
 {format_carryover_threads(state.get('carryover_threads', []))}
@@ -226,8 +292,7 @@ def build_character_user_prompt(profile: CharacterProfile, state: SceneState) ->
 你对其他人的动态印象：
 {relationships}
 
-你能看到的最近公共窗口（仅最近几轮）：
-{short_term_window}
+{visibility_block}
 
 你自己的最近私有记忆：
 {private_memory}
@@ -239,8 +304,8 @@ def build_character_user_prompt(profile: CharacterProfile, state: SceneState) ->
 4. hidden_agenda 必须指向生存、控制、摆脱羞辱或规避惩罚。
 5. action_and_dialogue 要把动作和说话写在一起，不要拆开。
 6. 如果这是 retain，本轮默认承接上一场残留的空气、姿势、伤口和未说完的话；如果是 shift，也必须把上一场留下的后果带在身上。
+7. 如果通信模式是 delayed_inbox，你可以选择发出 transmission_target / transmission_content，但必须接受它不会立刻被对方看到。
 """.strip()
-
 
 def build_symbolism_system_prompt() -> str:
     return """
@@ -402,6 +467,45 @@ def format_relationship_snapshot(dynamic_relationships: dict[str, dict[str, str]
             lines.append(f"- {observer} -> {target}：{label}")
     return "\n".join(lines) if lines else "（暂无关系变化）"
 
+
+def format_local_inbox(local_inbox: list[dict[str, object]]) -> str:
+    if not local_inbox:
+        return "（收件箱为空，你只能根据过时信息和本地现状行动）"
+    lines: list[str] = []
+    for entry in local_inbox[-5:]:
+        lines.append(
+            f"- 来自 {entry.get('sender', '未知')}｜抵达时刻：第 {entry.get('delivered_round', '?')} 轮｜原始延迟：{entry.get('original_delay', '?')}｜内容：{entry.get('content', '')}"
+        )
+    return "\n".join(lines)
+
+
+def format_pending_outbox(pending_transmissions: list[dict[str, object]], speaker: str) -> str:
+    pending = [item for item in pending_transmissions if item.get('sender') == speaker]
+    if not pending:
+        return "（没有在途消息）"
+    lines: list[str] = []
+    for item in pending:
+        lines.append(
+            f"- 发往 {item.get('target', '未知')}｜剩余延迟：{item.get('remaining_delay', '?')}｜内容：{item.get('content', '')}"
+        )
+    return "\n".join(lines)
+
+
+def format_transmission_log(transmission_log: list[dict[str, object]]) -> str:
+    if not transmission_log:
+        return "（暂无延迟消息记录）"
+    lines: list[str] = []
+    for item in transmission_log:
+        status = item.get('status', 'queued')
+        if status == 'delivered':
+            lines.append(
+                f"- 已送达｜{item.get('sender')} -> {item.get('target')}｜第 {item.get('delivered_round', '?')} 轮｜内容：{item.get('content', '')}"
+            )
+        else:
+            lines.append(
+                f"- 在途｜{item.get('sender')} -> {item.get('target')}｜剩余延迟：{item.get('remaining_delay', '?')}｜内容：{item.get('content', '')}"
+            )
+    return "\n".join(lines)
 
 def format_chapter_history(chapter_history: list[dict[str, object]], limit: int = 3) -> str:
     if not chapter_history:

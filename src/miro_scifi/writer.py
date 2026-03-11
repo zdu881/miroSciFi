@@ -18,6 +18,7 @@ from .prompts import (
     format_scene_log,
     format_showrunner_plan,
     format_symbolism_plan,
+    format_transmission_log,
 )
 
 

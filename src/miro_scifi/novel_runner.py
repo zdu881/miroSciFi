@@ -20,7 +20,7 @@ from .engine import (
     MockSymbolismEngine,
 )
 from .graph import build_scene_graph, create_initial_state
-from .prompts import WORLD_CONTEXT_PROMPT, default_character_profiles
+from .prompts import WORLD_CONTEXT_PROMPT, default_character_profiles, light_cone_character_profiles
 from .writer import LiveSceneWriter, MockSceneWriter
 
 
@@ -276,8 +276,86 @@ def idea_dream_lease() -> NovelIdea:
     )
 
 
+def idea_light_cone_blindspot() -> NovelIdea:
+    return NovelIdea(
+        key="light_cone_blindspot",
+        title="《光锥盲区》",
+        logline=(
+            "在没有超光速通讯的太阳系里，地球的主权只剩比木星殖民地更慢的命令回波。地球应急秘书沈竟和木卫三临时总督韩漠，"
+            "在一条条以光时计价的迟到消息之间，争夺谁有资格把已经发生的事实写成法律。"
+        ),
+        themes=[
+            "光速上限如何摧毁中央集权的实时幻觉",
+            "谁离信息源更近，谁就更早拥有别人的未来",
+            "法律、市场和军令在光时延迟中彼此脱节",
+            "在同一个太阳系里，人们却活在彼此错开的现在里",
+        ],
+        tonal_guardrail=(
+            "保持冷、硬、真空般的迟到感。不要把它写成星战或英雄独立史诗，"
+            "只写人在延迟和回波里被迫用过时事实做决定。"
+        ),
+        world_context=(
+            "时间：22 世纪中叶。地点：太阳系。\n\n"
+            "科学前提：不存在超光速通讯。任何命令、报价、求救、新闻和谣言，都只能以光速传播。"
+            "地球到火星的通信延迟在 3 到 22 分钟之间，到木星圈常态约 40 分钟，到海王星约 4 小时。"
+            "因此，不存在全太阳系共享的‘现在’，只有一片片彼此错开的局部现在。\n\n"
+            "政治后果：地球仍宣称自己拥有法统，但越远的殖民地越清楚，中心的命令永远晚于本地事实。"
+            "当木星圈发生暴乱或自治接管，地球往往要在 80 分钟的因果盲区之后，才能收到消息并让命令抵达。\n\n"
+            "经济后果：最昂贵的职业不是部长，而是信息套利员。交易员愿意把自己发射到靠近信号源的中继站里，"
+            "只为了比地球金融城早 5 秒看到同一条市场数据。法律、市场和主权都开始按光时折价。"
+        ),
+        scene_outlines=[
+            SceneOutline(
+                title="第一章：四十分钟旧闻",
+                brief=(
+                    "地球同步轨道的主权协调厅收到一段来自木卫三港务局的暴乱画面，但那已经是四十分钟前的过去。"
+                    "沈竟必须在不知道现场现在变成什么样的情况下起草第一道指令；韩漠则已经活在地球尚未看见的下一步里。"
+                ),
+                turns=1,
+                chapter_target="2200 字左右",
+            ),
+            SceneOutline(
+                title="第二章：镇压指令在途",
+                brief=(
+                    "地球的镇压与接管命令已经出发，却还要再飞四十分钟才会抵达木卫三。"
+                    "韩漠必须在这段盲区里决定是替地球维稳，还是先把港口、补给和结算链条改写成本地既成事实。"
+                ),
+                turns=1,
+                chapter_target="2200 字左右",
+            ),
+            SceneOutline(
+                title="第三章：五秒期货",
+                brief=(
+                    "靠近木星信号中继站的交易账户已经提前看到港口接管的蛛丝马迹，氧气、氦三和航道保险价格开始先于法令波动。"
+                    "沈竟第一次意识到，市场总比法统更早收到未来；韩漠则准备利用这五秒到四十分钟不等的优势，给木星圈买下现实。"
+                ),
+                turns=1,
+                chapter_target="2200 字左右",
+            ),
+            SceneOutline(
+                title="第四章：回波戒严",
+                brief=(
+                    "当镇压命令终于抵达木卫三时，韩漠已经让本地民兵、码头工会和补给仓签完了另一套文书。"
+                    "地球发来的法在这里成了迟到的回波，只能和已经落地的戒严现实互相抵触。"
+                ),
+                turns=1,
+                chapter_target="2200 字左右",
+            ),
+            SceneOutline(
+                title="第五章：光锥盲区",
+                brief=(
+                    "最终，沈竟和韩漠只能隔着整条光程谈判：两人永远收不到对方此刻的表情，只能收到对方已经过去的声音。"
+                    "结尾必须冷：地球保住部分名义，木星圈保住已发生的自治事实，真正被宣布死亡的是‘中央能同时统治所有地方’这个旧时代幻觉。"
+                ),
+                turns=1,
+                chapter_target="2400 字左右",
+            ),
+        ],
+    )
+
+
 def build_idea_registry() -> dict[str, NovelIdea]:
-    ideas = [idea_echo_tax(), idea_cry_guarantee(), idea_dream_lease()]
+    ideas = [idea_echo_tax(), idea_cry_guarantee(), idea_dream_lease(), idea_light_cone_blindspot()]
     return {idea.key: idea for idea in ideas}
 
 
@@ -293,11 +371,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--fast-lane",
         action="store_true",
-        help="live 模式下只保留 Character + Writer 为真实模型，Showrunner / Symbolism / Continuity 使用内置快速策略。",
+        help="live 模式下只保留 Writer 为真实模型，其余节点使用内置快速策略。",
     )
     parser.add_argument(
         "--idea",
-        default="cry_guarantee",
+        default="light_cone_blindspot",
         choices=sorted(build_idea_registry().keys()),
         help="选择内置小说 idea。默认使用新的 cry_guarantee。",
     )
@@ -379,6 +457,29 @@ def maybe_load_siliconflow_env(env_file: Path | None) -> None:
             os.environ["OPENAI_BASE_URL"] = "https://api.siliconflow.cn/v1"
 
 
+def build_characters_for_idea(idea_key: str):
+    if idea_key == "light_cone_blindspot":
+        return light_cone_character_profiles()
+    return default_character_profiles()
+
+
+def build_scene_runtime_overrides(idea_key: str) -> dict[str, Any]:
+    if idea_key == "light_cone_blindspot":
+        return {
+            "communication_mode": "delayed_inbox",
+            "delay_profile": {
+                "沈竟": {"韩漠": 2},
+                "韩漠": {"沈竟": 2},
+            },
+        }
+    return {
+        "communication_mode": "shared_public",
+        "delay_profile": {},
+    }
+
+
+
+
 def build_runtime(args: argparse.Namespace) -> dict[str, Any]:
     if args.mode == "live":
         if args.fast_lane:
@@ -447,6 +548,11 @@ def seed_state_from_previous(
         previous.get("time_marker")
         or previous.get("continuity_summary", {}).get("ending_time_marker", "")
     )
+    state["communication_mode"] = previous.get("communication_mode", state.get("communication_mode", "shared_public"))
+    state["local_inboxes"] = previous.get("local_inboxes", state.get("local_inboxes", {}))
+    state["pending_transmissions"] = list(previous.get("pending_transmissions", []))
+    state["transmission_log"] = list(previous.get("transmission_log", []))
+    state["delay_profile"] = previous.get("delay_profile", state.get("delay_profile", {}))
     return state
 
 
@@ -482,7 +588,7 @@ def run_novel(args: argparse.Namespace) -> tuple[NovelIdea, list[dict[str, Any]]
     maybe_load_siliconflow_env(args.env_file)
     idea_registry = build_idea_registry()
     idea = idea_registry[args.idea]
-    character_a, character_b = default_character_profiles()
+    character_a, character_b = build_characters_for_idea(idea.key)
     runtime = build_runtime(args)
     graph = build_scene_graph(
         character_a=character_a,
@@ -500,6 +606,7 @@ def run_novel(args: argparse.Namespace) -> tuple[NovelIdea, list[dict[str, Any]]
         outlines = outlines[: args.max_scenes]
 
     previous_state: dict[str, Any] | None = load_resume_state(args)
+    scene_overrides = build_scene_runtime_overrides(idea.key)
     results: list[dict[str, Any]] = []
     for offset, scene in enumerate(outlines, start=start_scene):
         initial_state = create_initial_state(
@@ -508,6 +615,8 @@ def run_novel(args: argparse.Namespace) -> tuple[NovelIdea, list[dict[str, Any]]
             scene_brief=f"{scene.title}：{scene.brief}",
             world_context=idea.world_context,
             chapter_target=scene.chapter_target,
+            communication_mode=scene_overrides["communication_mode"],
+            delay_profile=scene_overrides["delay_profile"],
         )
         seeded_state = seed_state_from_previous(initial_state, previous_state)
         result = graph.invoke(seeded_state)

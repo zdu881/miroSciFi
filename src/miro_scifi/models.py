@@ -21,6 +21,14 @@ class AgentAction(BaseModel):
     action_and_dialogue: str = Field(
         description="我实际做出的动作和说出的话，写成一个紧凑段落，不要解释。"
     )
+    transmission_target: str = Field(
+        default="",
+        description="如果你决定发出远程指令、情报或交易信号，写目标角色名；否则留空。",
+    )
+    transmission_content: str = Field(
+        default="",
+        description="如果你决定发出延迟送达的消息，写消息正文；否则留空。",
+    )
 
 
 class CharacterProfile(BaseModel):
@@ -137,6 +145,11 @@ class SceneState(TypedDict):
     last_scene_summary: str
     current_location: str
     time_marker: str
+    communication_mode: str
+    local_inboxes: dict[str, list[dict[str, Any]]]
+    pending_transmissions: list[dict[str, Any]]
+    transmission_log: list[dict[str, Any]]
+    delay_profile: dict[str, dict[str, int]]
     subtext_guide: str
     scene_data: str
     chapter_text: str
