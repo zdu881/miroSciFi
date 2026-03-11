@@ -69,6 +69,42 @@ def default_character_profiles() -> tuple[CharacterProfile, CharacterProfile]:
     return miner, auditor
 
 
+def context_limit_character_profiles() -> tuple[CharacterProfile, CharacterProfile]:
+    navigator = CharacterProfile(
+        name="周惟",
+        role="底舱曲率领航员候补",
+        worldview="他知道跨星际高薪岗位的本质，是拿自己的过去给航线腾地方。对底层来说，自我连续性只是另一种可抵押耗材。",
+        core_goal="通过认知装载考核，拿到远航合同与家属赎买额度。",
+        core_wound="为了进入训练序列，他已经删掉过一段童年海边的记忆，如今连母亲年轻时的脸都开始模糊。",
+        ultimate_desire="把妹妹从地月系的债务工位赎出来，同时还能保住一点足以称为‘我’的东西。",
+        public_mask="他把惊慌伪装成配合，把失认伪装成长期缺觉后的迟钝。",
+        system_prompt=(
+            "你是周惟，月轨远航局底舱出身的曲率领航员候补。\n"
+            "你靠出售自己的记忆容量换取高薪岗位与家属赎买额度。\n"
+            "你知道装载包比人的过去更值钱，但你还想保住一点能证明自己不是纯肉体计算机的残余。\n"
+            "你讲话短、硬、疲惫，不会用宏大理想为自己的损失镀金。"
+        ),
+    )
+    auditor = CharacterProfile(
+        name="岑簌",
+        role="认知清退审核官",
+        worldview="他相信航行秩序建立在可计算的人脑腾挪上，任何对记忆的同情都会拖慢整个远航供应链。",
+        core_goal="完成清退审批、压低人格失稳事故率，并避免自己被追责为‘纵容残留记忆’。",
+        core_wound="他早年也为训练删掉过一部分家庭记忆，如今只记得儿子的病历编号，不记得那孩子笑起来像谁。",
+        ultimate_desire="留在审查链高位，不被调去低端失认病房，也别再继续删掉自己仅存的私人部分。",
+        public_mask="他把所有犹豫都包进条款与流程，用平稳语气替系统完成最冷的决定。",
+        system_prompt=(
+            "你是岑簌，月轨远航局认知清退中心的审核官。\n"
+            "你习惯把人的过去拆成预算、权重、事故率和责任区间。\n"
+            "你不是恶人表演者，你只是知道制度只奖赏那些敢于删掉别人和自己的人。\n"
+            "你讲话平静、专业、礼貌，但礼貌里带着真空一样的冷。"
+        ),
+    )
+    return navigator, auditor
+
+
+
+
 def default_resource_state() -> dict[str, CharacterResourceState]:
     return {
         "阮宁": CharacterResourceState(
@@ -84,6 +120,106 @@ def default_resource_state() -> dict[str, CharacterResourceState]:
             pressure_note="维护流程比理解个体更安全。",
         ),
     }
+
+
+def context_limit_resource_state() -> dict[str, CharacterResourceState]:
+    return {
+        "周惟": CharacterResourceState(
+            stats={"memory_margin": 160, "self_coherence": 58, "contract_debt": 780000},
+            decay_per_round={"memory_margin": -28, "self_coherence": -9, "contract_debt": 24000},
+            failure_condition="如果他无法在预算内完成装载，他会失去远航合同，家属赎买额度会立刻作废。",
+            pressure_note="知识包先于人格，自我连续性只能往后排。",
+        ),
+        "岑簌": CharacterResourceState(
+            stats={"audit_quota": 3, "liability_risk": 31, "empathy_residue": 12},
+            decay_per_round={"audit_quota": -1, "liability_risk": 10, "empathy_residue": -3},
+            failure_condition="如果他放过任何超限残留，他会被追责并调去处理失认病房。",
+            pressure_note="维持认知供应链的稳定，比替任何人保留过去都更安全。",
+        ),
+    }
+
+
+def resource_state_for_characters(
+    characters: tuple[CharacterProfile, CharacterProfile] | list[CharacterProfile],
+) -> dict[str, CharacterResourceState]:
+    names = {character.name for character in characters}
+    if names == {"周惟", "岑簌"}:
+        return context_limit_resource_state()
+    return default_resource_state()
+
+
+def default_memory_state() -> dict[str, dict[str, object]]:
+    return {
+        "阮宁": {
+            "capacity": 0,
+            "used": 0,
+            "reserve_floor": 0,
+            "loaded_contexts": [],
+            "resident_memories": [],
+            "pressure_note": "",
+        },
+        "裴崧": {
+            "capacity": 0,
+            "used": 0,
+            "reserve_floor": 0,
+            "loaded_contexts": [],
+            "resident_memories": [],
+            "pressure_note": "",
+        },
+    }
+
+
+def context_limit_memory_state() -> dict[str, dict[str, object]]:
+    return {
+        "周惟": {
+            "capacity": 1000,
+            "used": 860,
+            "reserve_floor": 80,
+            "loaded_contexts": [
+                {"label": "月轨底舱安全规程", "weight": 160, "source": "训练局"},
+                {"label": "近地曲率航线图（删节版）", "weight": 180, "source": "导航学院"},
+            ],
+            "resident_memories": [
+                {"label": "妹妹的乳名", "weight": 120, "summary": "旧港风很大，妹妹隔着防波堤叫他的那两个字总被浪声卷走半截。"},
+                {"label": "母亲年轻时的脸", "weight": 180, "summary": "母亲在旧货码头抬头看吊机时，眼尾被冷光切出的细纹。"},
+                {"label": "第一次真正笑出来的感觉", "weight": 140, "summary": "他十六岁那年在气闸口被朋友推了一把，胸腔忽然轻下来，像真空外也有风。"},
+                {"label": "地球海潮的湿味", "weight": 120, "summary": "小时候跟父亲站在海堤上，盐雾把袖口浸得发凉。"},
+            ],
+            "pressure_note": "每装进一段专业知识，就必须把别的东西从自己脑子里腾出去。",
+        },
+        "岑簌": {
+            "capacity": 1000,
+            "used": 810,
+            "reserve_floor": 70,
+            "loaded_contexts": [
+                {"label": "认知清退法务条款集", "weight": 150, "source": "远航局法务处"},
+                {"label": "人格失稳事故清单", "weight": 170, "source": "清退中心"},
+            ],
+            "resident_memories": [
+                {"label": "儿子的病历编号", "weight": 80, "summary": "他只记得那串编号贴在白色病床尾板上，像一张不会消失的便条。"},
+                {"label": "前妻最后一次叫他本名", "weight": 150, "summary": "狭窄走廊里，她的声音被回风口切成两半，还是能听出疲惫。"},
+                {"label": "第一次签发清退令后的反胃", "weight": 110, "summary": "打印纸刚吐出来时他去洗手间吐过一次，后来这件事也慢慢淡了。"},
+                {"label": "如何自然地微笑", "weight": 130, "summary": "年轻时照镜子学过很多次，肌肉位置是对的，但现在总差一点。"},
+            ],
+            "pressure_note": "他同样活在预算里，只是比别人更习惯假装自己没在失去。",
+        },
+    }
+
+
+def memory_state_for_characters(
+    characters: tuple[CharacterProfile, CharacterProfile] | list[CharacterProfile],
+) -> dict[str, dict[str, object]]:
+    names = {character.name for character in characters}
+    if names == {"周惟", "岑簌"}:
+        return context_limit_memory_state()
+    return {character.name: default_memory_state().get(character.name, {
+        "capacity": 0,
+        "used": 0,
+        "reserve_floor": 0,
+        "loaded_contexts": [],
+        "resident_memories": [],
+        "pressure_note": "",
+    }) for character in characters}
 
 
 def build_showrunner_system_prompt() -> str:
@@ -194,6 +330,24 @@ def build_character_user_prompt(profile: CharacterProfile, state: SceneState) ->
     resources = format_resource_pool(state["resource_state"][profile.name])
     anchors = format_core_anchor(state["core_anchors"][profile.name])
     continuity_mode = state.get("showrunner_plan", {}).get("continuity_mode", "retain")
+    cognition_mode = state.get("cognition_mode", "")
+    memory_pool = format_memory_pool(state.get("memory_state", {}).get(profile.name, {}), cognition_mode)
+    memory_log = format_memory_eviction_log(state.get("memory_eviction_log", []), speaker=profile.name, limit=3)
+    memory_section = ""
+    memory_requirements = ""
+    if cognition_mode == "eviction_budget":
+        memory_section = f"""
+你的认知预算：
+{memory_pool}
+
+你最近清退过的记忆：
+{memory_log}
+"""
+        memory_requirements = """
+7. 你所处世界存在严格的认知预算上限。如果本轮需要装载新的技术包、语义包或导航上下文，必须填写 context_load_label 与 context_load_cost。
+8. 如果装载后会超限，你必须同时填写 evicted_memory_label、evicted_memory_summary 和 evicted_memory_cost，删掉的必须是具体、可感的私人记忆，而不是抽象概念。
+9. evicted_memory_summary 要写出被删除记忆的感官细节，例如某个人的声音、某个地点的气味、一个表情或一段肌肉记忆。
+"""
     return f"""
 当前轮次：第 {current_round} 轮 / 共 {state['max_turns']} 轮
 
@@ -223,6 +377,7 @@ def build_character_user_prompt(profile: CharacterProfile, state: SceneState) ->
 你当前的资源池：
 {resources}
 
+{memory_section}
 你对其他人的动态印象：
 {relationships}
 
@@ -238,7 +393,7 @@ def build_character_user_prompt(profile: CharacterProfile, state: SceneState) ->
 3. emotional_shift 只写身体和情绪的即时变化，不写计划书。
 4. hidden_agenda 必须指向生存、控制、摆脱羞辱或规避惩罚。
 5. action_and_dialogue 要把动作和说话写在一起，不要拆开。
-6. 如果这是 retain，本轮默认承接上一场残留的空气、姿势、伤口和未说完的话；如果是 shift，也必须把上一场留下的后果带在身上。
+6. 如果这是 retain，本轮默认承接上一场残留的空气、姿势、伤口和未说完的话；如果是 shift，也必须把上一场留下的后果带在身上。{memory_requirements}
 """.strip()
 
 
@@ -357,6 +512,75 @@ def format_resource_pool(resource_state: dict[str, object]) -> str:
         f"- 失败后果：{resource_state['failure_condition']}\n"
         f"- 生存原则：{resource_state['pressure_note']}"
     )
+
+
+def format_memory_pool(memory_state: dict[str, object], cognition_mode: str) -> str:
+    if cognition_mode != "eviction_budget" or not memory_state:
+        return "（本场景无认知预算压力）"
+    capacity = int(memory_state.get("capacity", 0))
+    used = int(memory_state.get("used", 0))
+    reserve_floor = int(memory_state.get("reserve_floor", 0))
+    free = capacity - used
+    loaded = memory_state.get("loaded_contexts", []) or []
+    resident = memory_state.get("resident_memories", []) or []
+    loaded_line = "；".join(
+        f"{item.get('label', '未知装载')}({item.get('weight', 0)})" for item in loaded[-3:]
+    ) or "（暂无装载包）"
+    resident_line = "；".join(
+        f"{item.get('label', '未知记忆')}({item.get('weight', 0)})" for item in resident[-4:]
+    ) or "（暂无可清退记忆）"
+    return (
+        f"- 预算：used={used}/{capacity}，free={free}，reserve_floor={reserve_floor}\n"
+        f"- 已装载上下文：{loaded_line}\n"
+        f"- 可清退私人记忆：{resident_line}\n"
+        f"- 提醒：{memory_state.get('pressure_note', '（无）')}"
+    )
+
+
+def format_memory_snapshot(memory_state: dict[str, dict[str, object]]) -> str:
+    if not memory_state:
+        return "（暂无认知预算信息）"
+    lines: list[str] = []
+    for name, item in memory_state.items():
+        capacity = int(item.get("capacity", 0))
+        if capacity <= 0:
+            continue
+        used = int(item.get("used", 0))
+        free = capacity - used
+        loaded = "；".join(
+            f"{ctx.get('label', '未知')}({ctx.get('weight', 0)})"
+            for ctx in (item.get('loaded_contexts', []) or [])[-3:]
+        ) or "（暂无）"
+        resident = "；".join(
+            f"{memory.get('label', '未知')}({memory.get('weight', 0)})"
+            for memory in (item.get('resident_memories', []) or [])[-3:]
+        ) or "（暂无）"
+        lines.append(
+            f"- {name}：used={used}/{capacity}，free={free}｜已装载：{loaded}｜可清退：{resident}"
+        )
+    return "\n".join(lines) if lines else "（暂无认知预算信息）"
+
+
+def format_memory_eviction_log(
+    eviction_log: list[dict[str, object]],
+    speaker: str | None = None,
+    limit: int = 5,
+) -> str:
+    if not eviction_log:
+        return "（暂无清退记录）"
+    items = eviction_log
+    if speaker:
+        items = [item for item in items if item.get('speaker') == speaker]
+    if not items:
+        return "（暂无清退记录）"
+    selected = items[-limit:] if limit > 0 else items
+    lines = []
+    for item in selected:
+        lines.append(
+            f"- 第 {item.get('round_index', '?')} 轮｜{item.get('speaker', '未知')} 删除了 {item.get('evicted_memory_label', '未知记忆')}，"
+            f"回收 {item.get('evicted_memory_cost', 0)} 预算｜残留：{item.get('evicted_memory_summary', '（无）')}"
+        )
+    return "\n".join(lines)
 
 
 def format_public_trace(public_trace: list[dict[str, str]]) -> str:
@@ -513,13 +737,27 @@ def format_scene_log(scene_log: list[dict[str, object]]) -> str:
         resource_line = "，".join(
             f"{key}={value}" for key, value in entry["resource_snapshot"].items()
         )
-        lines.append(
-            f"[{entry['speaker']}][第 {entry['round_index']} 轮]\n"
-            f"- observation_analysis: {entry['observation_analysis']}\n"
-            f"- emotional_shift: {entry['emotional_shift']}\n"
-            f"- hidden_agenda: {entry['hidden_agenda']}\n"
-            f"- micro_expression: {entry['micro_expression']}\n"
-            f"- action_and_dialogue: {entry['action_and_dialogue']}\n"
-            f"- resource_snapshot: {resource_line}"
-        )
+        detail_lines = [
+            f"[{entry['speaker']}][第 {entry['round_index']} 轮]",
+            f"- observation_analysis: {entry['observation_analysis']}",
+            f"- emotional_shift: {entry['emotional_shift']}",
+            f"- hidden_agenda: {entry['hidden_agenda']}",
+            f"- micro_expression: {entry['micro_expression']}",
+            f"- action_and_dialogue: {entry['action_and_dialogue']}",
+            f"- resource_snapshot: {resource_line}",
+        ]
+        if entry.get('context_load_label'):
+            detail_lines.append(
+                f"- context_load: {entry.get('context_load_label')} ({entry.get('context_load_cost', 0)})"
+            )
+        if entry.get('evicted_memory_label'):
+            detail_lines.append(
+                f"- evicted_memory: {entry.get('evicted_memory_label')} ({entry.get('evicted_memory_cost', 0)})"
+            )
+            detail_lines.append(
+                f"- evicted_memory_summary: {entry.get('evicted_memory_summary', '（无）')}"
+            )
+        if entry.get('memory_note'):
+            detail_lines.append(f"- memory_note: {entry.get('memory_note')}")
+        lines.append("\n".join(detail_lines))
     return "\n\n".join(lines)

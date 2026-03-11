@@ -20,7 +20,7 @@ from .engine import (
     MockSymbolismEngine,
 )
 from .graph import build_scene_graph, create_initial_state
-from .prompts import WORLD_CONTEXT_PROMPT, default_character_profiles
+from .prompts import WORLD_CONTEXT_PROMPT, context_limit_character_profiles, default_character_profiles
 from .writer import LiveSceneWriter, MockSceneWriter
 
 
@@ -276,13 +276,115 @@ def idea_dream_lease() -> NovelIdea:
     )
 
 
+def idea_context_limit() -> NovelIdea:
+    return NovelIdea(
+        key="context_limit",
+        title="《上下文法则》",
+        logline=(
+            "在曲率航行依赖人脑临时承载高维导航包的时代，远航高薪岗位只向愿意删掉过去的人开放。"
+            "底舱领航员候补周惟和认知清退审核官岑簌，在一次次装载与失认之间，"
+            "共同见证制度如何把‘我是谁’改造成一种可以腾挪的储存空间。"
+        ),
+        themes=[
+            "认知带宽被金融化之后，人格如何成为可调度基础设施",
+            "技能与记忆的零和博弈",
+            "底层向上流动的代价不再只是身体，而是过去本身",
+            "程序化审查如何把失去自我写成合规流程",
+        ],
+        tonal_guardrail=(
+            "保持冷、窄、失认般的剥夺感。不要写英雄主义飞船奇观，不要写热血远航，"
+            "只写人在装载包和清退令之间，怎样一点点失去能把自己叫回来的词。"
+        ),
+        world_context=(
+            "时间：2197 年。\n"
+            "地点：地月轨道远航工业带与太阳系外环启航走廊。\n\n"
+            "社会背景：\n"
+            "人类已经掌握曲率航行，但飞船无法把全部拓扑导航、引力折叠与异星语义协议外包给机器。"
+            "最稳定的做法，是把高密度知识包直接压进经过基因筛选的人脑。\n"
+            "颅骨容积和突触代谢上限固定不变，每装进一段新的上下文，就必须删掉等量的旧记忆。\n"
+            "远航局把这种制度称为‘认知清退’：童年、亲属称谓、恋爱记忆、海潮气味，"
+            "都可以被量化成可回收储位。高薪岗位和家属赎买额度，只发给愿意腾出更多脑内空间的人。\n\n"
+            "基调要求：\n"
+            "1. 这是社会派硬科幻，不是太空冒险爽文。\n"
+            "2. 角色首先服从合同、预算、审查和生存压力，而不是理想主义。\n"
+            "3. 不要写成‘牺牲自我换来伟大胜利’，只写制度如何让人把失去理解为工作流程。\n"
+            "4. 允许时间连续，也允许空间跳转，但每一场都要保留‘还有什么已经想不起来’的空洞。"
+        ),
+        scene_outlines=[
+            SceneOutline(
+                title="第一章：装载窗口",
+                brief=(
+                    "月轨远航局 A-12 认知装载舱里，周惟为了拿到弧灯号的底舱领航合同，必须接收第一份高密度导航包。"
+                    "岑簌负责审核他的预算是否足够，并要求他主动删除一段私人记忆腾空间。场景必须建立：记忆可以被清退、制度如何定价人格连续性、以及两人之间冷硬的职业关系。"
+                ),
+                turns=1,
+                chapter_target="2200 字左右",
+            ),
+            SceneOutline(
+                title="第二章：失认宿舍",
+                brief=(
+                    "装载结束后的同一夜，周惟回到低重力宿舍，发现自己已经叫不出妹妹的乳名。"
+                    "远航局又推来一份补丁包，要求他在天亮前再腾出一段可验证的私人记忆；岑簌通过远程复核链路追着他补齐预算。"
+                ),
+                turns=1,
+                chapter_target="2200 字左右",
+            ),
+            SceneOutline(
+                title="第三章：语义压舱室",
+                brief=(
+                    "为了通过外环启航审批，周惟必须额外装载一份异星外交语义包。"
+                    "这次需要腾出的不再是名字，而是某种更接近爱和安慰的感觉。岑簌奉命在白色压舱室里完成监督，确保没有任何私人残留占住预算。"
+                ),
+                turns=1,
+                chapter_target="2200 字左右",
+            ),
+            SceneOutline(
+                title="第四章：白舱回访",
+                brief=(
+                    "启航前的白舱回访席里，周惟已经出现轻微失认和人格断片，却还要接受岑簌的人工问询。"
+                    "他们不再陌生，但这种熟悉只是因为岑簌越来越清楚，周惟还能从哪里继续被切走。"
+                ),
+                turns=1,
+                chapter_target="2200 字左右",
+            ),
+            SceneOutline(
+                title="第五章：盲跳许可",
+                brief=(
+                    "最终盲跳许可签发前，弧灯号要求周惟装入终航星图与失稳补丁。"
+                    "他只剩最后一段足以把自己叫回来的私人记忆可删；岑簌也必须在系统追责前签发许可。结尾必须冷：飞船可以起跳，合同和赎买额度也能兑现，但被删掉的那部分不会再回来。"
+                ),
+                turns=1,
+                chapter_target="2400 字左右",
+            ),
+        ],
+    )
+
+
+def build_characters_for_idea(idea_key: str):
+    if idea_key == "context_limit":
+        return context_limit_character_profiles()
+    return default_character_profiles()
+
+
+def build_scene_runtime_overrides(idea_key: str) -> dict[str, Any]:
+    if idea_key == "context_limit":
+        return {
+            "cognition_mode": "eviction_budget",
+        }
+    return {
+        "cognition_mode": "standard",
+    }
+
+
+
+
 def build_idea_registry() -> dict[str, NovelIdea]:
-    ideas = [idea_echo_tax(), idea_cry_guarantee(), idea_dream_lease()]
+    ideas = [idea_echo_tax(), idea_cry_guarantee(), idea_dream_lease(), idea_context_limit()]
     return {idea.key: idea for idea in ideas}
 
 
 def default_novel_idea() -> NovelIdea:
-    return build_idea_registry()["echo_tax"]
+    return build_idea_registry()["context_limit"]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -297,9 +399,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--idea",
-        default="cry_guarantee",
+        default="context_limit",
         choices=sorted(build_idea_registry().keys()),
-        help="选择内置小说 idea。默认使用新的 cry_guarantee。",
+        help="选择内置小说 idea。默认使用新的 context_limit。",
     )
     parser.add_argument(
         "--character-model",
@@ -447,6 +549,10 @@ def seed_state_from_previous(
         previous.get("time_marker")
         or previous.get("continuity_summary", {}).get("ending_time_marker", "")
     )
+    state["cognition_mode"] = previous.get("cognition_mode", state.get("cognition_mode", "standard"))
+    state["memory_state"] = previous.get("memory_state", state.get("memory_state", {}))
+    state["memory_archive"] = previous.get("memory_archive", state.get("memory_archive", {}))
+    state["memory_eviction_log"] = list(previous.get("memory_eviction_log", []))
     return state
 
 
@@ -482,7 +588,7 @@ def run_novel(args: argparse.Namespace) -> tuple[NovelIdea, list[dict[str, Any]]
     maybe_load_siliconflow_env(args.env_file)
     idea_registry = build_idea_registry()
     idea = idea_registry[args.idea]
-    character_a, character_b = default_character_profiles()
+    character_a, character_b = build_characters_for_idea(idea.key)
     runtime = build_runtime(args)
     graph = build_scene_graph(
         character_a=character_a,
@@ -500,6 +606,7 @@ def run_novel(args: argparse.Namespace) -> tuple[NovelIdea, list[dict[str, Any]]
         outlines = outlines[: args.max_scenes]
 
     previous_state: dict[str, Any] | None = load_resume_state(args)
+    scene_overrides = build_scene_runtime_overrides(idea.key)
     results: list[dict[str, Any]] = []
     for offset, scene in enumerate(outlines, start=start_scene):
         initial_state = create_initial_state(
@@ -508,6 +615,7 @@ def run_novel(args: argparse.Namespace) -> tuple[NovelIdea, list[dict[str, Any]]
             scene_brief=f"{scene.title}：{scene.brief}",
             world_context=idea.world_context,
             chapter_target=scene.chapter_target,
+            cognition_mode=scene_overrides["cognition_mode"],
         )
         seeded_state = seed_state_from_previous(initial_state, previous_state)
         result = graph.invoke(seeded_state)

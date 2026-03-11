@@ -21,6 +21,26 @@ class AgentAction(BaseModel):
     action_and_dialogue: str = Field(
         description="我实际做出的动作和说出的话，写成一个紧凑段落，不要解释。"
     )
+    context_load_label: str = Field(
+        default="",
+        description="如果本轮必须装载新的技术知识、导航上下文或语义包，写装载内容；否则留空。",
+    )
+    context_load_cost: int = Field(
+        default=0,
+        description="本轮装载内容占用的认知预算。若无新增装载，填 0。",
+    )
+    evicted_memory_label: str = Field(
+        default="",
+        description="为了腾出预算而主动删除的记忆标签，例如‘妹妹的乳名’；若无删除则留空。",
+    )
+    evicted_memory_summary: str = Field(
+        default="",
+        description="被删除记忆的具体内容或感官细节，供后续作家节点写成剥夺感。",
+    )
+    evicted_memory_cost: int = Field(
+        default=0,
+        description="该段被删除记忆回收的预算值；若无删除，填 0。",
+    )
 
 
 class CharacterProfile(BaseModel):
@@ -128,6 +148,10 @@ class SceneState(TypedDict):
     dynamic_relationships: dict[str, dict[str, str]]
     core_anchors: dict[str, dict[str, str]]
     resource_state: dict[str, dict[str, Any]]
+    cognition_mode: str
+    memory_state: dict[str, dict[str, Any]]
+    memory_archive: dict[str, list[dict[str, Any]]]
+    memory_eviction_log: list[dict[str, Any]]
     scene_log: list[dict[str, Any]]
     director_log: list[str]
     symbolism_plan: dict[str, Any]

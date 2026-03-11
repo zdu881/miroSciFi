@@ -289,6 +289,128 @@ def build_mock_character_action(profile: CharacterProfile, state: SceneState) ->
     brief = state.get("scene_brief", "")
     location = state.get("current_location", "")
     is_miner = profile.name == "阮宁"
+    is_navigator = profile.name == "周惟"
+    is_cognitive_auditor = profile.name == "岑簌"
+
+    if "装载窗口" in brief or "认知装载舱" in brief:
+        if is_navigator:
+            return AgentAction(
+                observation_analysis="岑簌先看预算条再看自己，说明这份合同真正雇佣的不是人，而是自己脑子里还没被占满的那点空白。",
+                emotional_shift="冷却胶贴在后颈时像一片薄冰，胃里却慢慢涌上来一股更旧的热意，像身体提前知道这次要丢掉什么。",
+                hidden_agenda="把第一份导航包装进去，先拿到弧灯号底舱合同，让妹妹的赎买额度别再往下掉。",
+                micro_expression="他把签字笔夹得很紧，视线在预算条和名字栏之间来回停了两次。",
+                action_and_dialogue="他把腕骨压在读写台上：‘装吧。你们要的不是配合，是空间。我把能腾的先腾出来，合同别再往后拖。’",
+                context_load_label="弧灯号底舱导航包·第一段",
+                context_load_cost=180,
+                evicted_memory_label="妹妹的乳名",
+                evicted_memory_summary="旧港风太大，妹妹隔着防波堤喊他的那两个字，总被浪声吞掉半截。",
+                evicted_memory_cost=120,
+            )
+        if is_cognitive_auditor:
+            return AgentAction(
+                observation_analysis="他连删掉什么都答得这样快，说明家属债务已经把他压到没资格挑记忆，只能挑还能换多少钱。",
+                emotional_shift="白舱的无菌光让他眼周那层疲惫更薄，他没有表情，只觉得流程终于进入了自己熟悉的速度。",
+                hidden_agenda="让周惟在第一轮就学会主动报出可删记忆，后面流程才会更顺。",
+                micro_expression="他把清退条款翻到最后一页，指腹在‘自愿腾挪’那行字上停了一下。",
+                action_and_dialogue="他平声提醒：‘导航包不会为你的人生留白。预算不足，就自己说一段能删的。系统只负责记录，不负责替你可惜。’",
+            )
+
+    if "失认宿舍" in brief or "低重力宿舍" in brief or "补丁包" in brief:
+        if is_navigator:
+            return AgentAction(
+                observation_analysis="补丁包追到宿舍里来，说明刚才那次清退在系统眼里还远远不够，连睡一觉都得先腾空间。",
+                emotional_shift="宿舍风口吹出来的冷气一阵一阵掠过耳后接口，他张了张嘴，舌尖却先碰到一小块空白。",
+                hidden_agenda="把夜里的补丁装完，别让合同在启航前就被退回候补名单。",
+                micro_expression="他盯着终端里那条妹妹发来的语音请求，指尖悬在回拨键上，迟迟没有按下去。",
+                action_and_dialogue="他靠着床架回话：‘补丁发过来。我知道预算不够。把海那段拿走，别动别的——至少今晚别动。’",
+                context_load_label="失稳补丁·夜间检核包",
+                context_load_cost=120,
+                evicted_memory_label="地球海潮的湿味",
+                evicted_memory_summary="小时候跟父亲站在海堤上，盐雾把袖口一点点浸凉，他一直以为那股味道能陪自己更久。",
+                evicted_memory_cost=120,
+            )
+        if is_cognitive_auditor:
+            return AgentAction(
+                observation_analysis="他没有再讨价还价，只要求别一次拿走太多，说明失认已经开始发生，只是他还想给自己留个可辨认的边。",
+                emotional_shift="远程复核界面的黄灯稳定闪着，他的语气仍平，像在替一套自动程序补全最后一格人声。",
+                hidden_agenda="把补丁推进去，别让周惟因为预算缺口在起飞前就掉出合规范围。",
+                micro_expression="他把远程窗口缩小又放大，像在确认对方脸上那点迟钝是不是已经开始蔓延。",
+                action_and_dialogue="他在链路里说：‘宿舍不是例外区。补丁今晚必须装完。你现在保住的每一段记忆，都会在明天的复核里变成理由。’",
+            )
+
+    if "语义压舱室" in brief or "异星外交语义包" in brief or "白色压舱室" in brief:
+        if is_navigator:
+            return AgentAction(
+                observation_analysis="这次要删的不是称呼，而是某种更软的感觉，说明系统真正嫌占地方的，从来不是事实，而是人还能被什么打动。",
+                emotional_shift="冷白色读写灯照得他牙根发酸，胸口像被什么东西轻轻掏空，又没有留下真正的伤口。",
+                hidden_agenda="把语义包装进去，保住出航资格；至于那些更难命名的东西，先让它们消失。",
+                micro_expression="他把下唇咬出一条很淡的白痕，手却稳稳按在确认片上。",
+                action_and_dialogue="他看着岑簌：‘把那段也拿走。反正你们要的不是我会不会想人，是我会不会把外星语说准。’",
+                context_load_label="异星外交语义包·第一类称呼",
+                context_load_cost=140,
+                evicted_memory_label="第一次真正笑出来的感觉",
+                evicted_memory_summary="十六岁那年，有人从气闸口后面推了他一把，他踉跄着回头时，胸腔忽然轻得像真空外也有风。",
+                evicted_memory_cost=140,
+            )
+        if is_cognitive_auditor:
+            return AgentAction(
+                observation_analysis="周惟已经学会自己说出该删什么，这说明训练正在成功：人格会主动替制度让位。",
+                emotional_shift="他念条款时喉咙略干，像白舱里每一口空气都被过滤得过于干净，只剩规程的味道。",
+                hidden_agenda="完成跨物种语义装载审批，并把所有可能被定义成私人残留的空隙提前堵死。",
+                micro_expression="他把白手套的指尖在面板边缘轻轻抹了一下，像在擦去一粒并不存在的灰。",
+                action_and_dialogue="他把压舱协议推过去：‘外环不会为你的私人感受减轻词汇密度。要么删，要么换人。你比我清楚候补名单有多长。’",
+                context_load_label="跨物种责任豁免条款",
+                context_load_cost=110,
+                evicted_memory_label="第一次签发清退令后的反胃",
+                evicted_memory_summary="打印纸从机器里吐出来时，他去洗手间吐过一次。后来这件事慢慢只剩下制度要求的那半句说明。",
+                evicted_memory_cost=110,
+            )
+
+    if "白舱回访" in brief or "人格断片" in brief or "人工问询" in brief:
+        if is_navigator:
+            return AgentAction(
+                observation_analysis="岑簌问的不是他还记不记得家人，而是他还能不能被稳定读取，说明自己已经更像一件即将出厂的部件。",
+                emotional_shift="回访席的白光把他的眼底照得发麻，他明明坐着，却总觉得身体里有一块地方对不上号。",
+                hidden_agenda="别在回访席上被判成失稳样本，至少先把起飞前最后一道门过掉。",
+                micro_expression="他在回答前先摸了摸自己的胸牌，像要确认上面的名字还和自己有关。",
+                action_and_dialogue="他看着录入灯：‘我不是故障。我只是有些词出来得慢一点。你们删掉的东西太多了，剩下的总要排队。’",
+            )
+        if is_cognitive_auditor:
+            return AgentAction(
+                observation_analysis="他已经开始靠摸胸牌确认自己，这种轻微失认正是最危险也最方便被归档的阶段。",
+                emotional_shift="他把问询节奏放得更匀，心口却像被某个久远而模糊的家庭场景轻轻顶了一下，很快又没了。",
+                hidden_agenda="让周惟在记录里显得‘仍可使用’，同时把责任边界写得足够干净。",
+                micro_expression="他把回访问卷往前推了一厘米，眼神却没有真正落到周惟脸上。",
+                action_and_dialogue="他平声说：‘只回答是否。你还能否在不调取私人残留的前提下完成盲跳前测试？系统要的是稳定，不是你的解释。’",
+            )
+
+    if "盲跳许可" in brief or "终航星图" in brief or "最终盲跳" in brief:
+        if is_navigator:
+            return AgentAction(
+                observation_analysis="终航星图要占掉的那部分，已经逼到只剩最后一段能把自己叫回来的东西；合同真正要求的不是技术，而是愿不愿意把‘我’让到最后。",
+                emotional_shift="许可闸门边的冷却雾贴着手背爬上来，他忽然很想记住点什么，却一时找不到该从哪里抓起。",
+                hidden_agenda="拿到盲跳许可，让弧灯号起飞，也让赎买额度真的打到家属账户。至于自己会剩成什么样，先别算。",
+                micro_expression="他盯着确认屏上的本名看了几秒，像那两个字已经开始和自己分家。",
+                action_and_dialogue="他把手按上最终授权区：‘装终航星图。剩下那段也拿走。飞船得走，钱得到账，别让我在最后一步停下来。’",
+                context_load_label="终航星图与失稳补丁",
+                context_load_cost=180,
+                evicted_memory_label="母亲年轻时的脸",
+                evicted_memory_summary="旧货码头的吊机灯从她脸侧擦过去，眼尾那几道细纹像被海风压得很浅，他一直以为自己还能记得更久。",
+                evicted_memory_cost=180,
+            )
+        if is_cognitive_auditor:
+            return AgentAction(
+                observation_analysis="周惟已经不再追问删掉之后还剩什么，这说明制度终于把人训练到了最省事的阶段。",
+                emotional_shift="他念最终条款时嗓子发紧了一瞬，像有个旧名字在喉咙里碰了一下，又很快沉下去。",
+                hidden_agenda="在责任追溯前完成签发，把飞船和自己都推离这间白舱。",
+                micro_expression="他把许可章悬在面板上空半秒，随即很稳地按了下去。",
+                action_and_dialogue="他低声确认：‘许可签发后，任何被清退内容都不再享有追索权。弧灯号会起跳，家属额度会结算，剩下的空白由你个人承担。’",
+                context_load_label="盲跳事故责任矩阵",
+                context_load_cost=150,
+                evicted_memory_label="前妻最后一次叫他本名",
+                evicted_memory_summary="狭窄走廊里，她的声音被回风口切成两半，还是能听出疲惫。后来那两个字越来越像一条与自己无关的旧记录。",
+                evicted_memory_cost=150,
+            )
 
     if "续租窗口" in brief or "深睡期" in brief:
         if is_miner:
@@ -434,13 +556,72 @@ class MockCharacterEngine:
         if contextual is not None:
             return contextual
         round_index = state["turn_count"]
-        scripted_turns = self._script[profile.name]
-        return scripted_turns[min(round_index, len(scripted_turns) - 1)]
+        scripted_turns = self._script.get(profile.name)
+        if scripted_turns:
+            return scripted_turns[min(round_index, len(scripted_turns) - 1)]
+        return AgentAction(
+            observation_analysis="眼前流程不会为任何私人理由停下，自己只能在更窄的缝里继续选择。",
+            emotional_shift="身体先一步绷紧，像在等一张迟早会落下来的通知。",
+            hidden_agenda="把当前损失推迟到下一步，而不是现在就彻底失去主动。",
+            micro_expression="他把视线从终端边角挪开时停了一瞬，又迅速恢复成平稳的样子。",
+            action_and_dialogue="他把条件往现实的一侧推了一点：‘先把这一格流程走完，剩下的代价以后再算。’",
+        )
 
 
 def _infer_mock_opening(scene_brief: str, state: SceneState) -> tuple[str, str, str, str]:
     previous_time = state.get("time_marker") or "凌晨四点十二分"
     previous_location = state.get("current_location") or "雾港第七码头的情绪采样站担保窗口"
+    if any(token in scene_brief for token in ["装载窗口", "失认宿舍", "语义压舱室", "白舱回访", "盲跳许可", "上下文"]):
+        context_keyword_map = [
+            (
+                ("装载窗口", "认知装载舱"),
+                (
+                    "retain",
+                    "这是认知清退制度的开场，人物必须先被钉在预算条和白舱读写灯之间。",
+                    "月轨标准时 03:16",
+                    "月轨远航局 A-12 认知装载舱",
+                ),
+            ),
+            (
+                ("失认宿舍", "低重力宿舍", "补丁包"),
+                (
+                    "shift",
+                    "让装载后的空白先回到私人空间里发作，再由制度追进去继续逼迫。",
+                    "月轨标准时 04:02",
+                    "弧灯号候补宿舍的低重力睡舱",
+                ),
+            ),
+            (
+                ("语义压舱室", "异星外交语义包", "白色压舱室"),
+                (
+                    "shift",
+                    "故事进入更干净、更白、更像手术室的制度空间，强调人格如何给语言让位。",
+                    "月轨标准时 18:41",
+                    "远航局白色语义压舱室",
+                ),
+            ),
+            (
+                ("白舱回访", "人格断片", "人工问询"),
+                (
+                    "shift",
+                    "让装载后果在启航前的回访席上显形，证明失去不会自动变成稳定。",
+                    "月轨标准时 21:08",
+                    "远航局白舱回访席",
+                ),
+            ),
+            (
+                ("盲跳许可", "终航星图", "最终盲跳"),
+                (
+                    "shift",
+                    "所有代价要在正式许可里结算，冷的结尾必须发生在起飞门槛上。",
+                    "月轨标准时 23:46",
+                    "弧灯号盲跳许可闸门",
+                ),
+            ),
+        ]
+        for keywords, result in context_keyword_map:
+            if any(token in scene_brief for token in keywords):
+                return result
     if not state.get("chapter_history"):
         return (
             "retain",
@@ -508,23 +689,42 @@ def _infer_mock_opening(scene_brief: str, state: SceneState) -> tuple[str, str, 
 
 
 def _build_mock_beats(scene_brief: str, max_turns: int) -> list[dict[str, str | int]]:
-    beat_templates = [
-        (
-            "先把局面推成倒计时",
-            "系统弹出新的时限提醒，明确告诉角色他们正在失去最后的缓冲层。",
-            "所有说话都必须更快、更短、更伤体面。",
-        ),
-        (
-            "把私人处境升级为制度红线",
-            "上级流程或风险指标介入，证明这已经不是两个人之间的谈判。",
-            "双方都更不可能退让，只能把代价向对方或向自己身上继续压。",
-        ),
-        (
-            "用文书或程序完成一次不可逆收束",
-            "系统要求现场确认、签注、上传或交割某项不能撤回的内容。",
-            "角色必须丢掉某样东西，才能把眼前这一段时间暂时续上。",
-        ),
-    ]
+    if any(token in scene_brief for token in ["装载", "失认", "语义", "盲跳", "上下文", "记忆", "清退"]):
+        beat_templates = [
+            (
+                "先把预算推成超限",
+                "系统把新的装载包压进来，明确告诉角色：不删就无法继续。（围绕：{scene_brief}）",
+                "角色必须自己选出一段该被挪走的私人部分。",
+            ),
+            (
+                "把私人记忆升级为合规问题",
+                "上级流程介入，要求角色证明自己没有私藏任何不该留下的情感残留。（围绕：{scene_brief}）",
+                "所有回避都会被写进清退记录，关系只能更冷。",
+            ),
+            (
+                "用许可或签章完成不可逆收束",
+                "系统要求最终确认、签章或起跳前上传，已删掉的内容不再享有追索权。（围绕：{scene_brief}）",
+                "角色必须承认：继续向前的唯一方式，就是接受某段过去再也回不来。",
+            ),
+        ]
+    else:
+        beat_templates = [
+            (
+                "先把局面推成倒计时",
+                "系统弹出新的时限提醒，明确告诉角色他们正在失去最后的缓冲层。",
+                "所有说话都必须更快、更短、更伤体面。",
+            ),
+            (
+                "把私人处境升级为制度红线",
+                "上级流程或风险指标介入，证明这已经不是两个人之间的谈判。",
+                "双方都更不可能退让，只能把代价向对方或向自己身上继续压。",
+            ),
+            (
+                "用文书或程序完成一次不可逆收束",
+                "系统要求现场确认、签注、上传或交割某项不能撤回的内容。",
+                "角色必须丢掉某样东西，才能把眼前这一段时间暂时续上。",
+            ),
+        ]
     beats: list[dict[str, str | int]] = []
     for index in range(1, max_turns + 1):
         dramatic_function, forced_event, target_shift = beat_templates[
@@ -534,7 +734,7 @@ def _build_mock_beats(scene_brief: str, max_turns: int) -> list[dict[str, str | 
             {
                 "round_index": index,
                 "dramatic_function": dramatic_function,
-                "forced_event": f"{forced_event}（围绕：{scene_brief}）",
+                "forced_event": forced_event.format(scene_brief=scene_brief) if "{scene_brief}" in forced_event else f"{forced_event}（围绕：{scene_brief}）",
                 "target_shift": target_shift,
             }
         )
@@ -555,6 +755,20 @@ class MockShowrunnerEngine:
             scene_brief,
             state,
         )
+        if any(token in scene_brief for token in ["装载", "失认", "语义", "盲跳", "上下文", "记忆", "清退"]):
+            return ShowrunnerPlan(
+                scene_brief=scene_brief,
+                scene_purpose="把一场技术流程写成制度怎样逼着人主动删掉自己，才能继续往前移动。",
+                target_ending="至少一方为了装下新的知识包或签出新的许可，亲手放弃了一段无法恢复的私人记忆。",
+                core_conflict="周惟需要用人格连续性换取远航合同；岑簌则要用更冷的合规把这些失去包装成可执行流程。",
+                hidden_foreshadowing="某块白色读写灯、一张失焦的名牌或一段突然说不出的称呼，会反复提醒人物：空白正在扩张。",
+                tone_guardrail="不要写伟大牺牲，不要写热血飞船，只写预算条、白舱和清退记录怎样一点点吞掉‘我是谁’。",
+                continuity_mode=continuity_mode,
+                continuity_rationale=rationale,
+                opening_time_marker=opening_time,
+                opening_location=opening_location,
+                forced_beats=_build_mock_beats(scene_brief, max_turns),
+            )
         return ShowrunnerPlan(
             scene_brief=scene_brief,
             scene_purpose="把场景写成角色在制度压力下继续折损自我，而不是重新开一个开场。",
@@ -578,6 +792,41 @@ class MockSymbolismEngine:
         showrunner_plan: dict[str, object],
         state: SceneState,
     ) -> SymbolismPlan:
+        if state.get("cognition_mode") == "eviction_budget":
+            return SymbolismPlan(
+                scene_subtext="真正被压缩的不是信息，而是人格连续性：系统要求人先删掉自己，才能让技术顺利通过。",
+                imagery_cues=[
+                    {
+                        "motif": "白色读写灯",
+                        "sensory_surface": "冷、匀、没有情绪，亮起时像把人的脸削平一层",
+                        "emotional_mapping": "制度对人格的擦除没有暴力姿势，只有稳定而持续的照明",
+                        "usage_instruction": "让关键决定总发生在读写灯亮起或熄灭的瞬间，不要解释其意义。",
+                    },
+                    {
+                        "motif": "失焦的名牌",
+                        "sensory_surface": "塑料边缘被手指磨得发亮，字却像每次看都更陌生一点",
+                        "emotional_mapping": "一个人仍在履约，却越来越不像自己的名字所属者",
+                        "usage_instruction": "把人物确认自我时的动作，写成摸胸牌、盯编号、核对签名。",
+                    },
+                    {
+                        "motif": "后颈冷却胶",
+                        "sensory_surface": "薄、凉、带一点药味，贴久了像神经表面结了一层霜",
+                        "emotional_mapping": "技术改造留下的剥夺感被包进日常护理用品里",
+                        "usage_instruction": "把强烈情绪写成角色下意识去按、揭、抚平冷却胶，而不是直接陈述悲伤。",
+                    },
+                ],
+                gesture_rewrites=[
+                    "把‘他忘记了亲人的名字’改写成他看着语音请求上的称呼栏，却迟迟想不起该怎么读出来。",
+                    "把‘她/他很害怕失去自我’改写成他先去摸胸牌或签名处，确认那两个字还和自己有关。",
+                    "把‘审核官也动摇了’改写成他念条款时喉咙紧了一瞬，像有个旧名字在里面碰了一下。",
+                ],
+                forbidden_explicit_phrases=[
+                    "他心里想",
+                    "他突然想起自己已经不是自己",
+                    "制度很残酷",
+                    "他们都被震撼了",
+                ],
+            )
         return SymbolismPlan(
             scene_subtext="真正被买卖的不是情绪，而是人为了继续活下去而主动修剪自我的能力。",
             imagery_cues=[
@@ -617,6 +866,17 @@ class MockSymbolismEngine:
 def _infer_mock_ending(scene_brief: str, state: SceneState) -> tuple[str, str, str, str]:
     opening_time = state.get("time_marker") or "凌晨四点十二分"
     opening_location = state.get("current_location") or "雾港第七码头的情绪采样站担保窗口"
+    if any(token in scene_brief for token in ["装载窗口", "失认宿舍", "语义压舱室", "白舱回访", "盲跳许可", "上下文"]):
+        if "装载窗口" in scene_brief or "认知装载舱" in scene_brief:
+            return (opening_time, opening_location, "月轨标准时 03:49", "A-12 装载舱外的消毒走廊")
+        if "失认宿舍" in scene_brief or "补丁包" in scene_brief:
+            return (opening_time, opening_location, "月轨标准时 04:28", "弧灯号候补宿舍的公共洗漱间")
+        if "语义压舱室" in scene_brief or "异星外交语义包" in scene_brief:
+            return (opening_time, opening_location, "月轨标准时 19:17", "白色语义压舱室外的编号廊桥")
+        if "白舱回访" in scene_brief or "人格断片" in scene_brief:
+            return (opening_time, opening_location, "月轨标准时 21:44", "远航局白舱回访席外的静压通道")
+        if "盲跳许可" in scene_brief or "终航星图" in scene_brief:
+            return (opening_time, opening_location, "月轨标准时 23:58", "弧灯号盲跳许可闸门内侧")
     if not state.get("chapter_history"):
         return (
             opening_time,
@@ -696,5 +956,5 @@ class MockContinuityEngine:
             irreversible_change="至少一项体面、权利、岗位安全感或情绪所有权已经被正式折损，无法完整回收。",
             carryover_threads=carryover_threads,
             resolved_threads=resolved_threads,
-            next_scene_pressure="系统不会撤回本场后果；下一场只会让它们在新的地点或更晚的时间里继续发作。",
+            next_scene_pressure=("系统不会归还被清退的内容；下一场只会让新的装载和更大的空白继续叠上去。" if state.get("cognition_mode") == "eviction_budget" else "系统不会撤回本场后果；下一场只会让它们在新的地点或更晚的时间里继续发作。"),
         )

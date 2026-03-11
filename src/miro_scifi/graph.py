@@ -16,8 +16,9 @@ from .models import (
 from .prompts import (
     DEFAULT_SCENE_BRIEF,
     WORLD_CONTEXT_PROMPT,
-    default_resource_state,
     format_symbolism_plan,
+    memory_state_for_characters,
+    resource_state_for_characters,
 )
 from .writer import SceneWriter, build_scene_data, write_chapter
 
@@ -30,7 +31,22 @@ def create_initial_state(
     world_context: str | None = None,
     short_window_size: int = 4,
     chapter_target: str = "1000 字左右",
+    resource_state_override: dict[str, dict] | None = None,
+    cognition_mode: str = "standard",
+    memory_state_override: dict[str, dict[str, object]] | None = None,
 ) -> SceneState:
+    resource_payload = resource_state_override or {
+        name: resource.model_dump()
+        for name, resource in resource_state_for_characters(characters).items()
+    }
+    memory_payload = memory_state_override or {
+        name: {
+            **payload,
+            "loaded_contexts": list(payload.get("loaded_contexts", [])),
+            "resident_memories": list(payload.get("resident_memories", [])),
+        }
+        for name, payload in memory_state_for_characters(characters).items()
+    }
     return {
         "world_context": (world_context or WORLD_CONTEXT_PROMPT).strip(),
         "scene_brief": scene_brief,
@@ -47,10 +63,11 @@ def create_initial_state(
             }
             for character in characters
         },
-        "resource_state": {
-            name: resource.model_dump()
-            for name, resource in default_resource_state().items()
-        },
+        "resource_state": resource_payload,
+        "cognition_mode": cognition_mode,
+        "memory_state": memory_payload,
+        "memory_archive": {character.name: [] for character in characters},
+        "memory_eviction_log": [],
         "scene_log": [],
         "director_log": [],
         "symbolism_plan": {},
@@ -129,6 +146,10 @@ def initialize_relationships(
                 mapping[observer.name][target.name] = "把对方视作掐着自己账户命门的制度接口。"
             elif "审核员" in observer.role and "矿工" in target.role:
                 mapping[observer.name][target.name] = "把对方视作高波动、可替代、需要分级处理的样本提供者。"
+            elif "领航员" in observer.role and "审核官" in target.role:
+                mapping[observer.name][target.name] = "把对方视作有权决定自己该忘掉什么的冷接口。"
+            elif "审核官" in observer.role and "领航员" in target.role:
+                mapping[observer.name][target.name] = "把对方视作一块高价值但随时可能失稳的人脑载体。"
             else:
                 mapping[observer.name][target.name] = "陌生、互不信任、只在制度流程中接触。"
     return mapping
@@ -181,6 +202,10 @@ def build_opening_broadcast(state: SceneState) -> tuple[str, str]:
 
 
 def build_location_detail(location: str) -> str:
+    if "装载" in location or "白舱" in location or "远航局" in location or "许可" in location:
+        return "舱壁上的预算条一格一格亮灭，像有人在替大脑计数。"
+    if "宿舍" in location or "回访" in location:
+        return "空气里有冷却胶和旧金属混在一起的味道，像一段刚被擦掉的梦还没散干净。"
     if "公寓" in location or "疗养仓" in location:
         return "走廊尽头的氧雾机隔几秒喘一下，像一台不太愿意继续工作的肺。"
     if "回收站" in location or "黑市" in location:
@@ -189,6 +214,10 @@ def build_location_detail(location: str) -> str:
 
 
 def build_location_micro_expression(location: str) -> str:
+    if "装载" in location or "白舱" in location or "远航局" in location or "许可" in location:
+        return "白色读写灯在观察窗里一跳一跳，像神经元被迫给别的东西腾地方。"
+    if "宿舍" in location or "回访" in location:
+        return "走廊尽头的门锁偶尔自检，红点掠过每张脸时都像在核对谁还记得自己的名字。"
     if "公寓" in location or "疗养仓" in location:
         return "狭窄走廊里的感应灯亮一阵灭一阵，门缝里漏出的氧雾在脚边拖成一层淡白。"
     if "回收站" in location or "黑市" in location:
@@ -297,7 +326,23 @@ def apply_character_output(
         micro_expression=output.micro_expression,
         action_and_dialogue=output.action_and_dialogue,
     ).model_dump()
-    resource_snapshot = dict(state["resource_state"][speaker]["stats"])
+    updated_resource_state = {
+        name: {
+            "stats": dict(payload["stats"]),
+            "decay_per_round": dict(payload["decay_per_round"]),
+            "failure_condition": payload["failure_condition"],
+            "pressure_note": payload["pressure_note"],
+        }
+        for name, payload in state["resource_state"].items()
+    }
+    updated_memory_state, updated_memory_archive, updated_eviction_log, memory_note = apply_cognitive_eviction(
+        state,
+        speaker,
+        output,
+        round_index,
+        updated_resource_state,
+    )
+    resource_snapshot = dict(updated_resource_state[speaker]["stats"])
     private_record = CharacterSceneEvent(
         speaker=speaker,
         round_index=round_index,
@@ -308,6 +353,15 @@ def apply_character_output(
         action_and_dialogue=output.action_and_dialogue,
         resource_snapshot=resource_snapshot,
     ).model_dump()
+    if output.context_load_label:
+        private_record["context_load_label"] = output.context_load_label
+        private_record["context_load_cost"] = output.context_load_cost
+    if output.evicted_memory_label:
+        private_record["evicted_memory_label"] = output.evicted_memory_label
+        private_record["evicted_memory_summary"] = output.evicted_memory_summary
+        private_record["evicted_memory_cost"] = output.evicted_memory_cost
+    if memory_note:
+        private_record["memory_note"] = memory_note
 
     updated_private_memory = {
         name: list(memory) for name, memory in state["private_memory"].items()
@@ -325,8 +379,159 @@ def apply_character_output(
             state["short_window_size"],
         ),
         "private_memory": updated_private_memory,
+        "resource_state": updated_resource_state,
+        "memory_state": updated_memory_state,
+        "memory_archive": updated_memory_archive,
+        "memory_eviction_log": updated_eviction_log,
         "scene_log": state["scene_log"] + [private_record],
     }
+
+
+def apply_cognitive_eviction(
+    state: SceneState,
+    speaker: str,
+    output: AgentAction,
+    round_index: int,
+    resource_state: dict[str, dict[str, object]],
+) -> tuple[dict[str, dict[str, object]], dict[str, list[dict[str, object]]], list[dict[str, object]], str]:
+    memory_state = {
+        name: {
+            **payload,
+            "loaded_contexts": list(payload.get("loaded_contexts", [])),
+            "resident_memories": list(payload.get("resident_memories", [])),
+        }
+        for name, payload in state.get("memory_state", {}).items()
+    }
+    memory_archive = {
+        name: list(items) for name, items in state.get("memory_archive", {}).items()
+    }
+    eviction_log = list(state.get("memory_eviction_log", []))
+    if state.get("cognition_mode") != "eviction_budget":
+        return memory_state, memory_archive, eviction_log, ""
+    speaker_memory = memory_state.get(speaker)
+    if not speaker_memory or int(speaker_memory.get("capacity", 0)) <= 0:
+        return memory_state, memory_archive, eviction_log, ""
+
+    note_parts: list[str] = []
+    if output.context_load_label:
+        load_cost = max(0, int(output.context_load_cost or 0))
+        speaker_memory["used"] = int(speaker_memory.get("used", 0)) + load_cost
+        speaker_memory["loaded_contexts"] = clamp_list(
+            speaker_memory.get("loaded_contexts", [])
+            + [
+                {
+                    "label": output.context_load_label,
+                    "weight": load_cost,
+                    "source": "scene_turn",
+                }
+            ],
+            8,
+        )
+        note_parts.append(f"装载了 {output.context_load_label}（{load_cost}）")
+
+    if output.evicted_memory_label:
+        freed = evict_named_memory(
+            speaker_memory,
+            memory_archive,
+            eviction_log,
+            speaker,
+            round_index,
+            output.evicted_memory_label,
+            output.evicted_memory_summary,
+            int(output.evicted_memory_cost or 0),
+            auto_generated=False,
+        )
+        if freed:
+            speaker_memory["used"] = max(0, int(speaker_memory.get("used", 0)) - freed)
+            note_parts.append(f"清退了 {output.evicted_memory_label}（回收 {freed}）")
+
+    capacity = int(speaker_memory.get("capacity", 0))
+    reserve_floor = int(speaker_memory.get("reserve_floor", 0))
+    allowed_used = max(0, capacity - reserve_floor)
+    while int(speaker_memory.get("used", 0)) > allowed_used and speaker_memory.get("resident_memories"):
+        fallback = choose_fallback_memory(speaker_memory)
+        if not fallback:
+            break
+        freed = evict_named_memory(
+            speaker_memory,
+            memory_archive,
+            eviction_log,
+            speaker,
+            round_index,
+            str(fallback.get("label", "未知记忆")),
+            str(fallback.get("summary", "一段被系统自动清退的私人内容。")),
+            int(fallback.get("weight", 0)),
+            auto_generated=True,
+        )
+        speaker_memory["used"] = max(0, int(speaker_memory.get("used", 0)) - freed)
+        note_parts.append(f"系统自动清退了 {fallback.get('label', '未知记忆')}（回收 {freed}）")
+
+    sync_memory_stats(resource_state, speaker, speaker_memory, note_parts)
+    return memory_state, memory_archive, eviction_log, "；".join(note_parts)
+
+
+def choose_fallback_memory(memory_state: dict[str, object]) -> dict[str, object] | None:
+    resident = list(memory_state.get("resident_memories", []))
+    if not resident:
+        return None
+    return max(resident, key=lambda item: int(item.get("weight", 0)))
+
+
+def evict_named_memory(
+    speaker_memory: dict[str, object],
+    memory_archive: dict[str, list[dict[str, object]]],
+    eviction_log: list[dict[str, object]],
+    speaker: str,
+    round_index: int,
+    label: str,
+    summary: str,
+    cost: int,
+    *,
+    auto_generated: bool,
+) -> int:
+    resident = list(speaker_memory.get("resident_memories", []))
+    matched = None
+    for index, item in enumerate(resident):
+        if item.get("label") == label:
+            matched = resident.pop(index)
+            break
+    if matched is None:
+        matched = {
+            "label": label,
+            "weight": max(0, cost or 120),
+            "summary": summary or "一段没有被保住的私人记忆。",
+        }
+    speaker_memory["resident_memories"] = resident
+    payload = {
+        "speaker": speaker,
+        "round_index": round_index,
+        "evicted_memory_label": label or matched.get("label", "未知记忆"),
+        "evicted_memory_summary": summary or matched.get("summary", "一段没有被保住的私人记忆。"),
+        "evicted_memory_cost": max(0, cost or int(matched.get("weight", 0))),
+        "auto_generated": auto_generated,
+    }
+    memory_archive.setdefault(speaker, [])
+    memory_archive[speaker] = memory_archive[speaker] + [payload]
+    eviction_log.append(payload)
+    return int(payload["evicted_memory_cost"])
+
+
+def sync_memory_stats(
+    resource_state: dict[str, dict[str, object]],
+    speaker: str,
+    speaker_memory: dict[str, object],
+    note_parts: list[str],
+) -> None:
+    stats = resource_state.get(speaker, {}).get("stats", {})
+    free_margin = int(speaker_memory.get("capacity", 0)) - int(speaker_memory.get("used", 0))
+    if "memory_margin" in stats:
+        stats["memory_margin"] = free_margin
+    if note_parts and "self_coherence" in stats:
+        stats["self_coherence"] = max(0, int(stats.get("self_coherence", 0)) - 4)
+    if note_parts and "empathy_residue" in stats:
+        stats["empathy_residue"] = max(0, int(stats.get("empathy_residue", 0)) - 2)
+
+
 
 
 def director_checkpoint(state: SceneState) -> dict:
@@ -398,6 +603,16 @@ def build_resource_warning(name: str, pool: dict[str, object]) -> str:
             f"{name} 的审核终端亮起红线：quota_clock={stats['quota_clock']}，"
             f"discipline_risk={stats['discipline_risk']}。"
         )
+    if "memory_margin" in stats and "self_coherence" in stats:
+        return (
+            f"{name} 的认知面板显示：memory_margin={stats['memory_margin']}，"
+            f"self_coherence={stats['self_coherence']}。"
+        )
+    if "audit_quota" in stats and "liability_risk" in stats:
+        return (
+            f"{name} 的清退终端显示：audit_quota={stats['audit_quota']}，"
+            f"liability_risk={stats['liability_risk']}。"
+        )
     return f"{name} 的生存压力继续上升。"
 
 
@@ -414,7 +629,7 @@ def apply_resource_decay(
         }
         for stat_name, delta in new_pool["decay_per_round"].items():
             new_value = new_pool["stats"].get(stat_name, 0) + delta
-            if stat_name in {"san_value", "dignity", "humanity_residue", "quota_clock"}:
+            if stat_name in {"san_value", "dignity", "humanity_residue", "quota_clock", "memory_margin", "self_coherence", "audit_quota", "empathy_residue"}:
                 new_value = max(0, new_value)
             new_pool["stats"][stat_name] = new_value
         updated[name] = new_pool
@@ -456,6 +671,8 @@ def infer_relationship_label(entry: dict[str, object]) -> str:
         return "绝望驱动的依赖与试探正在加深。"
     if any(token in combined for token in ["流程", "配额", "风控", "纪律", "指标"]):
         return "程序化审视里的压制意味更重了。"
+    if any(token in combined for token in ["记忆", "清退", "装载", "上下文", "失认", "航线"]):
+        return "双方都在拿人格连续性给制度让位，关系越来越像一次冷的外科手术。"
     if any(token in combined for token in ["裂纹", "停顿", "记住", "迟疑"]):
         return "看似无事，实际已经出现一丝被压下去的动摇。"
     if any(token in combined for token in ["麻木", "屈辱", "发热", "反胃"]):

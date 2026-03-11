@@ -13,6 +13,8 @@ from .prompts import (
     build_writer_user_prompt,
     format_chapter_history,
     format_carryover_threads,
+    format_memory_eviction_log,
+    format_memory_snapshot,
     format_relationship_snapshot,
     format_resource_snapshot,
     format_scene_log,
@@ -97,6 +99,12 @@ class MockSceneWriter:
 
 
 def build_scene_data(state: SceneState) -> str:
+    cognition_block = ""
+    if state.get("cognition_mode") == "eviction_budget":
+        cognition_block = (
+            f"\n[认知预算快照]\n{format_memory_snapshot(state.get('memory_state', {}))}\n\n"
+            f"[记忆清退日志]\n{format_memory_eviction_log(state.get('memory_eviction_log', []), limit=8)}\n"
+        )
     return (
         f"[世界观]\n{state['world_context']}\n\n"
         f"[跨场连续性]\n"
@@ -107,7 +115,8 @@ def build_scene_data(state: SceneState) -> str:
         f"[场景简报]\n{state['scene_brief']}\n\n"
         f"[Showrunner 节拍表]\n{format_showrunner_plan(state['showrunner_plan'])}\n\n"
         f"[角色关系快照]\n{format_relationship_snapshot(state['dynamic_relationships'])}\n\n"
-        f"[资源压力快照]\n{format_resource_snapshot(state['resource_state'])}\n\n"
+        f"[资源压力快照]\n{format_resource_snapshot(state['resource_state'])}\n"
+        f"{cognition_block}\n"
         f"[完整场景日志]\n{format_scene_log(state['scene_log'])}"
     )
 
