@@ -1,0 +1,57 @@
+Metadata-Version: 2.4
+Name: miro-scifi
+Version: 0.1.0
+Summary: Multi-agent social sci-fi sandbox built with LangGraph
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: langchain
+Requires-Dist: langgraph
+Requires-Dist: langchain-openai
+Requires-Dist: pydantic>=2
+Requires-Dist: python-dotenv
+
+# Miro SciFi
+
+一个基于 Python + LangGraph 的社会派科幻多智能体推演原型，覆盖你方案中的 Phase 1 和 Phase 2：
+
+- 定义了 `AgentOutput` 的 Pydantic 结构化输出模型。
+- 用 `LangGraph` 搭建了 `Director -> Character A -> Character B -> Director Checkpoint` 的状态机。
+- 默认运行 3 个回合，并将公开历史与私有记忆严格分离。
+- 预置了“情绪共享 / 情绪交易”世界观，以及两个核心角色 Prompt。
+- 提供 `mock` 运行模式，没配 API Key 也能本地演示流程。
+
+## 安装
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+## 运行
+
+### 1) 本地演示（不调用外部模型）
+
+```bash
+miro-scifi --mode mock
+```
+
+### 2) 调 OpenAI 模型
+
+```bash
+export OPENAI_API_KEY=your_key_here
+miro-scifi --mode live --model openai:gpt-4o
+```
+
+## 当前实现范围
+
+- `Phase 1`：项目骨架、数据模型、两角色轮流发言 3 回合。
+- `Phase 2`：世界观 Prompt、角色 Prompt、信息不对称状态更新。
+
+## 关键文件
+
+- `src/miro_scifi/models.py`：Pydantic 数据模型与图状态定义。
+- `src/miro_scifi/prompts.py`：世界观、角色 Prompt、日志格式化。
+- `src/miro_scifi/engine.py`：LangChain 模型调用与 `mock` 引擎。
+- `src/miro_scifi/graph.py`：LangGraph 状态机与状态更新函数。
+- `src/miro_scifi/main.py`：CLI 入口。

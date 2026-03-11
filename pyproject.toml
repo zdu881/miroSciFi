@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "miro-scifi"
+version = "0.1.0"
+description = "Multi-agent social sci-fi sandbox built with LangGraph"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "langchain",
+    "langgraph",
+    "langchain-openai",
+    "pydantic>=2",
+    "python-dotenv",
+]
+
+[project.scripts]
+miro-scifi = "miro_scifi.main:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

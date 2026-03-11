@@ -1,0 +1,2 @@
+[console_scripts]
+miro-scifi = miro_scifi.main:main
