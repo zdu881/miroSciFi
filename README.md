@@ -1,12 +1,38 @@
 # Miro SciFi
 
-一个基于 Python + LangGraph 的社会派科幻多智能体推演原型，覆盖你方案中的 Phase 1 和 Phase 2：
+一个基于 Python + LangGraph 的社会派科幻多智能体推演原型，已经从“能跑通”升级为更贴近严肃文学生产的 Agent 系统：
 
-- 定义了 `AgentOutput` 的 Pydantic 结构化输出模型。
-- 用 `LangGraph` 搭建了 `Director -> Character A -> Character B -> Director Checkpoint` 的状态机。
-- 默认运行 3 个回合，并将公开历史与私有记忆严格分离。
-- 预置了“情绪共享 / 情绪交易”世界观，以及两个核心角色 Prompt。
-- 提供 `mock` 运行模式，没配 API Key 也能本地演示流程。
+- 用 `Showrunner` 在场景开始前生成节拍表，先锁定文学目的，再让角色进入冲突。
+- 给角色加入数值化资源池，让生存压力而不是温情本能驱动行为。
+- 把记忆拆成 `short_term_window`、`dynamic_relationships` 和 `core_anchors`，避免上下文失焦。
+- 把角色输出重构为“认知层 + 表现层”的 `AgentAction` 结构，逼模型显露言不由衷。
+- 在 `Writer` 之前新增 `Symbolism / Subtext` 中间层，先做意象映射，再写正文。
+- 新增 `miro-scifi-novel` 长篇 runner，可串联多个场景直接输出一篇万字级小说。
+
+## 当前架构
+
+```text
+[Start]
+  |
+  v
+[Showrunner Node] -> 生成节拍表 / 目标结局 / 强制事件
+  |
+  v
+[Director Setup]
+  |
+  v
+[Character A]
+  |
+  v
+[Character B]
+  |
+  v
+[Director Checkpoint] -> 资源衰减 / 关系更新 / 强制拉回主线
+  |
+  +---- 回合未结束 ----> [Character A]
+  |
+  +---- 回合结束 ------> [Symbolism Node] -> [Writer Node] -> [End]
+```
 
 ## 安装
 
@@ -24,32 +50,61 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-如果你的系统像当前这台机器一样缺少 `ensurepip` / `python3-venv`，优先使用 `uv`。
+如果你的系统缺少 `ensurepip` / `python3-venv`，优先使用 `uv`。
 
 ## 运行
 
-### 1) 本地演示（不调用外部模型）
+### 1) 本地演示
 
 ```bash
-miro-scifi --mode mock
+uv run python -m miro_scifi --mode mock
 ```
 
-### 2) 调 OpenAI 模型
+### 2) 真实模型
 
 ```bash
-export OPENAI_API_KEY=your_key_here
-miro-scifi --mode live --model openai:gpt-4o
+export OPENAI_API_KEY=your_openai_key
+export ANTHROPIC_API_KEY=your_anthropic_key
+uv run python -m miro_scifi --mode live \
+  --character-model openai:gpt-4o \
+  --showrunner-model openai:gpt-4o \
+  --symbolism-model openai:gpt-4o \
+  --writer-model anthropic:claude-3-5-sonnet-latest
 ```
 
-## 当前实现范围
+## 新的核心状态
 
-- `Phase 1`：项目骨架、数据模型、两角色轮流发言 3 回合。
-- `Phase 2`：世界观 Prompt、角色 Prompt、信息不对称状态更新。
+- `resource_state`：角色资源池，按回合自动衰减。
+- `showrunner_plan`：场景节拍表，包含目标结局、冲突、强制事件、伏笔。
+- `short_term_window`：只保留最近几轮公开窗口。
+- `dynamic_relationships`：角色对彼此的动态印象标签。
+- `core_anchors`：无论对话多长都始终注入 Prompt 顶部的创伤 / 渴望 / 伪装。
+- `symbolism_plan`：潜台词与物象建议。
+- `chapter_text`：最终小说正文。
 
 ## 关键文件
 
-- `src/miro_scifi/models.py`：Pydantic 数据模型与图状态定义。
-- `src/miro_scifi/prompts.py`：世界观、角色 Prompt、日志格式化。
-- `src/miro_scifi/engine.py`：LangChain 模型调用与 `mock` 引擎。
-- `src/miro_scifi/graph.py`：LangGraph 状态机与状态更新函数。
+- `src/miro_scifi/models.py`：新的 Pydantic 数据模型与全局状态。
+- `src/miro_scifi/prompts.py`：Showrunner、Character、Symbolism、Writer 全套 Prompt。
+- `src/miro_scifi/engine.py`：Character / Showrunner / Symbolism 的 live + mock 引擎。
+- `src/miro_scifi/graph.py`：资源衰减、关系压缩、状态机编排。
+- `src/miro_scifi/writer.py`：场景打包、潜台词指导、文学渲染。
 - `src/miro_scifi/main.py`：CLI 入口。
+
+## 长篇运行
+
+```bash
+uv run python -m miro_scifi.novel_runner --mode live
+```
+
+默认会读取 `~/MyInvestment/.env.local`，并把 `SILICONFLOW_API_KEY` 自动映射到 OpenAI 兼容环境变量，输出：
+
+- `outputs/echo_tax_idea.md`
+- `outputs/echo_tax_novel.md`
+- `outputs/echo_tax_states/`
+
+```bash
+uv run python -m miro_scifi.one_shot_novel --max-chapters 1
+```
+
+如果你只是想尽快产出一版长篇草稿，优先用 `one_shot_novel`；如果你要验证多节点架构，再用 `novel_runner`。

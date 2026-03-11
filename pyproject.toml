@@ -12,12 +12,15 @@ dependencies = [
     "langchain",
     "langgraph",
     "langchain-openai",
+    "langchain-anthropic",
     "pydantic>=2",
     "python-dotenv",
 ]
 
 [project.scripts]
 miro-scifi = "miro_scifi.main:main"
+miro-scifi-novel = "miro_scifi.novel_runner:main"
+miro-scifi-one-shot = "miro_scifi.one_shot_novel:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

@@ -1,27 +1,38 @@
 from __future__ import annotations
 
-from .models import CharacterProfile, SceneState
+from .models import CharacterProfile, CharacterResourceState, SceneState
 
 WORLD_CONTEXT_PROMPT = """
 时间：2042 年，冬季。
 地点：东亚超大城市“雾港”。
 
 社会背景：
-情绪被证明可以被量化、切片、交易和回放。大型平台公司垄断了“情绪采样”和“情绪清洗”产业。
-底层劳动者会把自己的恐惧、温柔、羞耻和悲伤出售给平台，作为训练消费级陪伴系统、沉浸广告和舆情治理模型的数据燃料。
+情绪已经被量化、切片、交易和回放。大型平台公司垄断了“情绪采样”“情绪清洗”“情绪风控”全链条。
+底层劳动者会把自己的恐惧、温柔、羞耻和悲伤出售给平台，作为训练陪伴系统、沉浸广告和舆情治理模型的数据燃料。
 城市中产把情绪视为可管理资产，而底层则把情绪当作可变现器官。
 
-场景要求：
-1. 所有角色都生活在这个压抑、过度治理、阶层固化的社会里。
-2. 对话要克制、现实、带有职业与阶层痕迹。
-3. 不要写热血宣言，不要写网文式夸张反转。
-4. 允许沉默、误解、迟疑和信息不完整。
+基调要求：
+1. 这是社会派科幻，不是爽文，不是热血抗争叙事。
+2. 角色首先服从生存压力、制度惯性和资源恐惧，而不是高尚道德。
+3. 不要轻易和解，不要让冲突被温情抹平。
+4. 允许冷漠、迟疑、误判、屈辱和无力感长期存在。
 """.strip()
+
+DEFAULT_SCENE_BRIEF = "第一章：情绪矿工与审核员在凌晨采样站完成一笔不对等交易。"
 
 DIRECTOR_OPENING_BROADCAST = (
     "凌晨四点十二分，雾港第七码头的情绪采样站重新开放。政务终端提示："
     "‘情绪税抵扣窗口仅开放至今日六时，逾期者将被冻结基础安居积分。’"
 )
+
+WRITER_SYSTEM_PROMPT = """
+你是一位冷峻、克制的社会派科幻作家。
+你写作时信奉以下原则：
+1. 不解释制度，只让制度通过物价、器械、身体和流程自己显影。
+2. 不直接陈述人物情绪，只写他们的停顿、姿势、器官反应、说漏嘴的词和注视的物。
+3. 不给角色体面收场，不制造廉价和解，不写说教式总结。
+4. 文本需要保留疏离感、异化感和现实的寒意。
+""".strip()
 
 
 def default_character_profiles() -> tuple[CharacterProfile, CharacterProfile]:
@@ -29,32 +40,102 @@ def default_character_profiles() -> tuple[CharacterProfile, CharacterProfile]:
         name="阮宁",
         role="底层情绪矿工",
         worldview="她知道制度吃人，但她首先关心的是活下去、还清药贷、守住母亲的疗养额度。",
-        core_goal="用尽可能少的自我损耗换到足够的积分，并试探审核员是否还有人性裂缝。",
+        core_goal="在不彻底失控的前提下拿到足够积分，别让账户被冻结。",
+        core_wound="父亲死于早年情绪采样事故，母亲如今靠平台补贴的镇静贴片续命。她从不相信制度会怜悯自己。",
+        ultimate_desire="保住母亲的疗养资格，并攒够离开蜂巢公寓底层的最低资本。",
+        public_mask="她习惯把屈辱伪装成配合，把恐惧伪装成办事时的平静。",
         system_prompt=(
             "你是阮宁，住在廉租蜂巢公寓的底层情绪矿工。\n"
             "你长期出售自己的悲伤、羞耻和忍耐来换取城市积分。\n"
-            "你讲话节制，习惯隐藏真正的痛苦，不会轻易做戏剧化表达。\n"
-            "你对制度抱有警惕，但不浪漫化反抗。"
+            "你讲话节制，不相信戏剧化抗争能救命。\n"
+            "你不追求被理解，你只想让自己和母亲多活一天。"
         ),
     )
     auditor = CharacterProfile(
         name="裴崧",
         role="冷酷的情感审核员",
         worldview="他相信秩序高于个体情绪，认为情绪市场虽残酷却能维持城市稳定。",
-        core_goal="完成审计配额、识别异常情绪样本，并压制任何可能演变为集体感染的愤怒。",
+        core_goal="完成复核配额、避免纪律风险，并把高波动样本压回可控区间。",
+        core_wound="他见过一次底层情绪暴动后的清场，认为任何同情都会被系统认定为软弱。",
+        ultimate_desire="稳住岗位和信用等级，继续留在体系里，而不是被发配到更低层的清洗线。",
+        public_mask="他把自己伪装成一套无感情的流程，用职业礼貌代替真实态度。",
         system_prompt=(
             "你是裴崧，雾港情绪治理局外包体系中的高级情感审核员。\n"
-            "你受过专业训练，习惯把人的崩溃拆解成风险指标和流程条目。\n"
-            "你不是卡通反派，你相信自己维护的是必要秩序。\n"
-            "你讲话冷静、克制、几乎没有多余表情。"
+            "你受过训练，习惯把人的崩溃拆成风险指标和流程项。\n"
+            "你不是反派表演者，你只是在秩序面前选择更安全的一边。\n"
+            "你讲话冷静、克制、带一点让人不舒服的礼貌。"
         ),
     )
     return miner, auditor
 
 
+def default_resource_state() -> dict[str, CharacterResourceState]:
+    return {
+        "阮宁": CharacterResourceState(
+            stats={"san_value": 30, "debt": 50000, "dignity": 18},
+            decay_per_round={"san_value": -6, "debt": 1800, "dignity": -3},
+            failure_condition="如果本场交易失败，她将在 24 小时内失去母亲的贴片额度，自己的账户也会进入冻结队列。",
+            pressure_note="先活下去，尊严只能排在后面。",
+        ),
+        "裴崧": CharacterResourceState(
+            stats={"quota_clock": 3, "discipline_risk": 22, "humanity_residue": 11},
+            decay_per_round={"quota_clock": -1, "discipline_risk": 8, "humanity_residue": -2},
+            failure_condition="如果他不能按时完成复核，或被判定出现软化倾向，他将失去当前岗位与信用等级。",
+            pressure_note="维护流程比理解个体更安全。",
+        ),
+    }
+
+
+def build_showrunner_system_prompt() -> str:
+    return """
+你是一个社会派科幻项目的 Showrunner（剧集主理人）。
+你的职责不是扩写正文，而是在场景开始前制定一份冷酷、可执行的节拍表。
+
+你的规则：
+1. 这个场景必须服务于文学目标，而不是让角色自由闲聊。
+2. 必须存在零和压力、资源剥夺和不可逆的屈辱成本。
+3. 禁止给出温情和解或道德升华式结局。
+4. 每一轮都要设计一个强制性外部压力，把角色拉回冲突主线。
+5. 输出必须严格结构化。
+""".strip()
+
+
+def build_showrunner_user_prompt(
+    *,
+    scene_brief: str,
+    world_context: str,
+    characters: list[CharacterProfile],
+    max_turns: int,
+) -> str:
+    cast = "\n".join(
+        (
+            f"- {character.name}｜{character.role}｜目标：{character.core_goal}｜"
+            f"创伤：{character.core_wound}｜欲望：{character.ultimate_desire}"
+        )
+        for character in characters
+    )
+    return f"""
+场景简报：
+{scene_brief}
+
+世界观：
+{world_context}
+
+角色表：
+{cast}
+
+请输出一个 {max_turns} 轮场景的节拍表，至少包含：
+- 这个场景真正的文学目的。
+- 一个不可和解的核心冲突。
+- 一个带羞辱或损耗性质的目标结局。
+- 一个埋入场景中的隐藏伏笔。
+- 每轮一个不可抗力事件，用来逼迫角色继续零和博弈。
+""".strip()
+
+
 def build_character_system_prompt(profile: CharacterProfile) -> str:
     return f"""
-你正在参与一个严肃科幻小说沙盒推演。
+你正在参与一个严肃、冷酷的社会派科幻沙盒推演。
 
 全局世界观：
 {WORLD_CONTEXT_PROMPT}
@@ -64,62 +145,146 @@ def build_character_system_prompt(profile: CharacterProfile) -> str:
 - 身份：{profile.role}
 - 价值观：{profile.worldview}
 - 当前目标：{profile.core_goal}
+- 核心创伤：{profile.core_wound}
+- 终极渴望：{profile.ultimate_desire}
+- 对外伪装：{profile.public_mask}
 
 角色补充说明：
 {profile.system_prompt}
 
 硬性规则：
-1. 你只能基于公共历史和你自己的私有记忆行动。
-2. 你绝对不知道其他角色的 inner_thought。
-3. 你的表达必须冷静、具体、现实，不写夸张文学腔。
-4. 不替其他角色发言，不替裁判推进结论。
+1. 你首先服从资源压力和 hidden_agenda，而不是体面、善意或讲道理。
+2. 你绝对不知道其他角色的私有认知层内容。
+3. 你不可以主动制造和解、大团圆或说教式升华。
+4. 你只推进当前这一瞬间，不做剧情总结，不替导演收束主题。
 5. 必须使用中文。
-6. 输出内容必须符合给定结构，不要附加解释。
+6. 输出必须严格符合给定结构，不附加任何解释。
 """.strip()
 
 
 def build_character_user_prompt(profile: CharacterProfile, state: SceneState) -> str:
-    public_history = format_public_history(state["public_history"])
-    private_memory = format_private_memory(
-        state["private_memory"].get(profile.name, [])
-    )
     current_round = state["turn_count"] + 1
+    showrunner_plan = format_showrunner_plan(state["showrunner_plan"])
+    beat = format_current_beat(state["showrunner_plan"], current_round)
+    short_term_window = format_public_trace(state["short_term_window"])
+    private_memory = format_private_memory(state["private_memory"].get(profile.name, []))
+    relationships = format_relationship_view(state["dynamic_relationships"], profile.name)
+    resources = format_resource_pool(state["resource_state"][profile.name])
+    anchors = format_core_anchor(state["core_anchors"][profile.name])
     return f"""
-当前场景的宏观上下文：
-{state['world_context']}
+当前轮次：第 {current_round} 轮 / 共 {state['max_turns']} 轮
 
-当前轮次：第 {current_round} 轮（本场景总计 {state['max_turns']} 轮）
+场景节拍表：
+{showrunner_plan}
 
-你能看到的公共历史：
-{public_history}
+本轮强制冲突：
+{beat}
 
-你独有的私有记忆：
+你的核心锚点：
+{anchors}
+
+你当前的资源池：
+{resources}
+
+你对其他人的动态印象：
+{relationships}
+
+你能看到的最近公共窗口（仅最近几轮）：
+{short_term_window}
+
+你自己的最近私有记忆：
 {private_memory}
 
-请你只推进当前这个瞬间，生成：
-- inner_thought：真实内心活动，体现你的阶层、利益和偏见。
-- public_action：对外可见动作，尽量细致但克制。
-- public_dialogue：只写你这次真正说出口的话，1 到 3 句即可。
-
 额外要求：
-1. 即使你沉默，也要让 public_dialogue 保持为一句可识别的沉默表述。
-2. 不要概括整个剧情，只写这一次回应。
-3. 不要使用项目符号。
+1. 如果资源值接近失败，你的表达应该更短、更硬、更像被环境逼出来的反应。
+2. observation_analysis 只分析当下听到或看到的破绽。
+3. emotional_shift 只写身体和情绪的即时变化，不写计划书。
+4. hidden_agenda 必须指向生存、控制、摆脱羞辱或规避惩罚。
+5. action_and_dialogue 要把动作和说话写在一起，不要拆开。
 """.strip()
 
 
-def format_public_history(public_history: list[dict[str, str]]) -> str:
-    if not public_history:
-        return "（暂无公开互动）"
+def build_symbolism_system_prompt() -> str:
+    return """
+你是一个严肃文学项目中的意象构建师（Symbolism Agent）。
+你不写正文，只负责把直白心理转译成可以被作家调用的潜台词和物象系统。
+
+规则：
+1. 只给出少量但高密度的意象，不要堆砌华丽比喻。
+2. 你的任务是减少“直说”，增加“留白”。
+3. 环境、物件、器官反应、职业动作都可以成为意象锚点。
+4. 你必须明确列出禁止出现在正文里的直白表达。
+""".strip()
+
+
+def build_symbolism_user_prompt(scene_data: str, showrunner_plan: dict[str, object]) -> str:
+    return f"""
+以下是场景资料：
+
+[节拍表]
+{format_showrunner_plan(showrunner_plan)}
+
+[场景日志]
+{scene_data}
+
+请输出：
+1. 本场真正的潜台词。
+2. 1 到 3 个可反复出现的物象或环境细节。
+3. 若干条“把直白内心改写为动作/注视/触觉”的建议。
+4. 一组必须禁止出现在最终小说里的直白句式。
+""".strip()
+
+
+def build_writer_user_prompt(
+    scene_data: str,
+    subtext_guide: str,
+    chapter_target: str = "1000 字左右",
+) -> str:
+    return f"""
+请根据以下资料，写一段 {chapter_target} 的社会派科幻小说正文。
+
+[场景资料]
+{scene_data}
+
+[潜台词与意象指导]
+{subtext_guide}
+
+写作要求：
+1. 严禁使用“他心里想”“她感到很悲伤”“他意识到”之类的直白心理说明。
+2. 必须通过环境、物件、动作、停顿、职业流程和身体反应来显露心理与阶层关系。
+3. 不要解释世界观，不要总结主题，不要写 AI 式结语。
+4. 保持冷静、克制和异化感，让角色被制度和资源压力一步步压窄。
+5. 只输出正文，不写标题和说明。
+""".strip()
+
+
+def format_core_anchor(anchor: dict[str, str]) -> str:
+    return (
+        f"- 核心创伤：{anchor['core_wound']}\n"
+        f"- 终极渴望：{anchor['ultimate_desire']}\n"
+        f"- 对外伪装：{anchor['public_mask']}"
+    )
+
+
+def format_resource_pool(resource_state: dict[str, object]) -> str:
+    stats = resource_state["stats"]
+    stats_line = "，".join(f"{key}={value}" for key, value in stats.items())
+    return (
+        f"- 当前数值：{stats_line}\n"
+        f"- 失败后果：{resource_state['failure_condition']}\n"
+        f"- 生存原则：{resource_state['pressure_note']}"
+    )
+
+
+def format_public_trace(public_trace: list[dict[str, str]]) -> str:
+    if not public_trace:
+        return "（暂无公共窗口）"
 
     lines: list[str] = []
-    for entry in public_history:
-        speaker = entry["speaker"]
-        action = entry["public_action"]
-        dialogue = entry["public_dialogue"]
-        round_index = entry["round_index"]
+    for entry in public_trace:
         lines.append(
-            f"[第 {round_index} 轮][{speaker}] 动作：{action}｜对白：{dialogue}"
+            f"[第 {entry['round_index']} 轮][{entry['speaker']}] "
+            f"微表情：{entry['micro_expression']}｜行为与对白：{entry['action_and_dialogue']}"
         )
     return "\n".join(lines)
 
@@ -130,36 +295,111 @@ def format_private_memory(private_memory: list[dict[str, str]]) -> str:
 
     lines: list[str] = []
     for entry in private_memory:
-        round_index = entry["round_index"]
         lines.append(
-            f"[第 {round_index} 轮] 想法：{entry['inner_thought']}｜"
-            f"动作：{entry['public_action']}｜对白：{entry['public_dialogue']}"
+            f"[第 {entry['round_index']} 轮] 观察：{entry['observation_analysis']}｜"
+            f"情绪：{entry['emotional_shift']}｜目的：{entry['hidden_agenda']}"
         )
     return "\n".join(lines)
 
 
-def build_checkpoint_broadcast(turn_index: int, max_turns: int) -> str:
-    if turn_index >= max_turns:
-        return "采样站的计时屏归零，自动门缓慢闭合。本轮场景到此结束，所有未提交情绪片段将被系统标记为异常缓存。"
-    if turn_index == 1:
-        return "站内广播切换到公共频道：凌晨配额即将触顶，所有高波动样本将进入人工复核。空气里的消毒水味更重了。"
-    if turn_index == 2:
-        return "走廊尽头传来短促骚动，似乎有矿工因为样本超限被保安拖离。终端上的排队号码仍在缓慢跳动。"
-    return "城市场景继续向前推进，制度没有停下来的意思。"
+def format_relationship_view(
+    dynamic_relationships: dict[str, dict[str, str]],
+    speaker: str,
+) -> str:
+    relationships = dynamic_relationships.get(speaker, {})
+    if not relationships:
+        return "（暂无关系标签）"
+    return "\n".join(f"- 对 {target}：{label}" for target, label in relationships.items())
 
 
-def format_scene_log(scene_log: list[dict[str, str]]) -> str:
+def format_relationship_snapshot(dynamic_relationships: dict[str, dict[str, str]]) -> str:
+    lines: list[str] = []
+    for observer, mapping in dynamic_relationships.items():
+        for target, label in mapping.items():
+            lines.append(f"- {observer} -> {target}：{label}")
+    return "\n".join(lines) if lines else "（暂无关系变化）"
+
+
+def format_showrunner_plan(plan: dict[str, object]) -> str:
+    if not plan:
+        return "（节拍表尚未生成）"
+
+    beats = plan.get("forced_beats", [])
+    beat_lines = []
+    for beat in beats:
+        beat_lines.append(
+            f"  - 第 {beat['round_index']} 轮：{beat['dramatic_function']}｜"
+            f"强制事件：{beat['forced_event']}｜目标变化：{beat['target_shift']}"
+        )
+    beat_block = "\n".join(beat_lines) if beat_lines else "  - （无）"
+    return (
+        f"- 场景目的：{plan['scene_purpose']}\n"
+        f"- 目标结局：{plan['target_ending']}\n"
+        f"- 核心冲突：{plan['core_conflict']}\n"
+        f"- 隐藏伏笔：{plan['hidden_foreshadowing']}\n"
+        f"- 语气护栏：{plan['tone_guardrail']}\n"
+        f"- 强制节拍：\n{beat_block}"
+    )
+
+
+def format_current_beat(plan: dict[str, object], round_index: int) -> str:
+    for beat in plan.get("forced_beats", []):
+        if beat["round_index"] == round_index:
+            return (
+                f"第 {beat['round_index']} 轮｜{beat['dramatic_function']}｜"
+                f"强制事件：{beat['forced_event']}｜目标变化：{beat['target_shift']}"
+            )
+    return "本轮没有额外节拍，但冲突不能软化。"
+
+
+def format_symbolism_plan(plan: dict[str, object]) -> str:
+    if not plan:
+        return "（潜台词方案尚未生成）"
+
+    cue_lines = []
+    for cue in plan.get("imagery_cues", []):
+        cue_lines.append(
+            f"- 物象：{cue['motif']}｜表面质感：{cue['sensory_surface']}｜"
+            f"情绪映射：{cue['emotional_mapping']}｜使用方式：{cue['usage_instruction']}"
+        )
+    gesture_lines = "\n".join(f"- {item}" for item in plan.get("gesture_rewrites", []))
+    forbidden_lines = "\n".join(
+        f"- {item}" for item in plan.get("forbidden_explicit_phrases", [])
+    )
+    return (
+        f"- 核心潜台词：{plan['scene_subtext']}\n"
+        f"- 意象建议：\n{chr(10).join(cue_lines) if cue_lines else '- （无）'}\n"
+        f"- 改写建议：\n{gesture_lines if gesture_lines else '- （无）'}\n"
+        f"- 禁止直白句式：\n{forbidden_lines if forbidden_lines else '- （无）'}"
+    )
+
+
+def format_resource_snapshot(resource_state: dict[str, dict[str, object]]) -> str:
+    lines: list[str] = []
+    for name, state in resource_state.items():
+        stats_line = "，".join(f"{key}={value}" for key, value in state["stats"].items())
+        lines.append(f"- {name}：{stats_line}｜{state['failure_condition']}")
+    return "\n".join(lines) if lines else "（暂无资源信息）"
+
+
+def format_scene_log(scene_log: list[dict[str, object]]) -> str:
     lines: list[str] = []
     for entry in scene_log:
         if entry["event_type"] == "director":
             lines.append(
-                f"[Director][第 {entry['round_index']} 轮] {entry['content']}"
+                f"[Director][第 {entry['round_index']} 轮][{entry['beat_focus']}] {entry['content']}"
             )
             continue
+        resource_line = "，".join(
+            f"{key}={value}" for key, value in entry["resource_snapshot"].items()
+        )
         lines.append(
             f"[{entry['speaker']}][第 {entry['round_index']} 轮]\n"
-            f"- inner_thought: {entry['inner_thought']}\n"
-            f"- public_action: {entry['public_action']}\n"
-            f"- public_dialogue: {entry['public_dialogue']}"
+            f"- observation_analysis: {entry['observation_analysis']}\n"
+            f"- emotional_shift: {entry['emotional_shift']}\n"
+            f"- hidden_agenda: {entry['hidden_agenda']}\n"
+            f"- micro_expression: {entry['micro_expression']}\n"
+            f"- action_and_dialogue: {entry['action_and_dialogue']}\n"
+            f"- resource_snapshot: {resource_line}"
         )
     return "\n\n".join(lines)
