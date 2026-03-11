@@ -31,7 +31,7 @@
   |
   +---- 回合未结束 ----> [Character A]
   |
-  +---- 回合结束 ------> [Symbolism Node] -> [Writer Node] -> [End]
+  +---- 回合结束 ------> [Symbolism Node] -> [Writer Node] -> [Continuity Node] -> [End]
 ```
 
 ## 安装
@@ -80,14 +80,16 @@ uv run python -m miro_scifi --mode live \
 - `dynamic_relationships`：角色对彼此的动态印象标签。
 - `core_anchors`：无论对话多长都始终注入 Prompt 顶部的创伤 / 渴望 / 伪装。
 - `symbolism_plan`：潜台词与物象建议。
+- `continuity_summary`：本场的跨场摘要、结尾时空坐标、不可逆变化与遗留线头。
+- `chapter_history` / `carryover_threads` / `last_scene_summary`：跨场续写时真正传给下一场的压缩记忆。
 - `chapter_text`：最终小说正文。
 
 ## 关键文件
 
 - `src/miro_scifi/models.py`：新的 Pydantic 数据模型与全局状态。
 - `src/miro_scifi/prompts.py`：Showrunner、Character、Symbolism、Writer 全套 Prompt。
-- `src/miro_scifi/engine.py`：Character / Showrunner / Symbolism 的 live + mock 引擎。
-- `src/miro_scifi/graph.py`：资源衰减、关系压缩、状态机编排。
+- `src/miro_scifi/engine.py`：Character / Showrunner / Symbolism / Continuity 的 live + mock 引擎。
+- `src/miro_scifi/graph.py`：资源衰减、关系压缩、状态机编排与跨场 Continuity 节点。
 - `src/miro_scifi/writer.py`：场景打包、潜台词指导、文学渲染。
 - `src/miro_scifi/main.py`：CLI 入口。
 
@@ -113,6 +115,7 @@ uv run python -m miro_scifi.one_shot_novel --max-chapters 1
 
 - `echo_tax`：原始的《回声税》长篇方案。
 - `cry_guarantee`：新的《哭声担保》方案，聚焦“公开哀悼权”的抵押与静音处理。
+- `dream_lease`：新的《梦层续租》方案，聚焦完整深睡期、梦层切割与夜间供氧的续租。
 
 示例：
 
@@ -126,4 +129,13 @@ uv run python -m miro_scifi.novel_runner --mode live --idea cry_guarantee --max-
 uv run python -m miro_scifi.novel_runner --mode live --idea cry_guarantee --start-scene 3 --max-scenes 1
 ```
 
-如果 `states_dir` 里已经有前一场的 `scene_XX.json`，runner 会自动续接资源状态、关系标签和锚点。
+
+快速产出长篇时，可以用 `--fast-lane`：
+
+```bash
+uv run python -m miro_scifi.novel_runner --mode live --fast-lane --idea dream_lease
+```
+
+`fast-lane` 会保留 `Writer` 的真实模型调用，同时把 Character / Showrunner / Symbolism / Continuity 切到内置快速策略；适合先把一版万字草稿跑出来，再按需要切回全 live。
+
+如果 `states_dir` 里已经有前一场的 `scene_XX.json`，runner 会自动续接资源状态、关系标签、连续性摘要、时空坐标和遗留线头。

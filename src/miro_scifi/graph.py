@@ -4,7 +4,7 @@ from typing import Literal
 
 from langgraph.graph import END, START, StateGraph
 
-from .engine import CharacterEngine, ShowrunnerEngine, SymbolismEngine
+from .engine import CharacterEngine, ContinuityEngine, ShowrunnerEngine, SymbolismEngine
 from .models import (
     AgentAction,
     CharacterProfile,
@@ -15,7 +15,6 @@ from .models import (
 )
 from .prompts import (
     DEFAULT_SCENE_BRIEF,
-    DIRECTOR_OPENING_BROADCAST,
     WORLD_CONTEXT_PROMPT,
     default_resource_state,
     format_symbolism_plan,
@@ -55,6 +54,12 @@ def create_initial_state(
         "scene_log": [],
         "director_log": [],
         "symbolism_plan": {},
+        "continuity_summary": {},
+        "chapter_history": [],
+        "carryover_threads": [],
+        "last_scene_summary": "",
+        "current_location": "",
+        "time_marker": "",
         "subtext_guide": "",
         "scene_data": "",
         "chapter_text": "",
@@ -72,6 +77,7 @@ def build_scene_graph(
     character_engine: CharacterEngine,
     showrunner_engine: ShowrunnerEngine,
     symbolism_engine: SymbolismEngine,
+    continuity_engine: ContinuityEngine,
     writer: SceneWriter,
 ):
     characters = [character_a, character_b]
@@ -92,6 +98,7 @@ def build_scene_graph(
     graph.add_node("director_checkpoint", director_checkpoint)
     graph.add_node("symbolism_node", make_symbolism_node(symbolism_engine))
     graph.add_node("writer_node", make_writer_node(writer))
+    graph.add_node("continuity_node", make_continuity_node(continuity_engine))
 
     graph.add_edge(START, "showrunner_node")
     graph.add_edge("showrunner_node", "director_setup")
@@ -104,7 +111,8 @@ def build_scene_graph(
         {"continue": "character_a_turn", "subtext": "symbolism_node"},
     )
     graph.add_edge("symbolism_node", "writer_node")
-    graph.add_edge("writer_node", END)
+    graph.add_edge("writer_node", "continuity_node")
+    graph.add_edge("continuity_node", END)
     return graph.compile()
 
 
@@ -138,24 +146,65 @@ def make_showrunner_node(
             world_context=state["world_context"],
             characters=characters,
             max_turns=state["max_turns"],
+            state=state,
         )
-        return {"showrunner_plan": plan.model_dump()}
+        return {
+            "showrunner_plan": plan.model_dump(),
+            "current_location": plan.opening_location,
+            "time_marker": plan.opening_time_marker,
+        }
 
     return node
+
+
+def build_opening_broadcast(state: SceneState) -> tuple[str, str]:
+    plan = state.get("showrunner_plan", {})
+    time_marker = plan.get("opening_time_marker") or state.get("time_marker") or "凌晨四点十二分"
+    location = plan.get("opening_location") or state.get("current_location") or "雾港第七码头的情绪采样站"
+    continuity_mode = plan.get("continuity_mode", "retain")
+    if state.get("last_scene_summary"):
+        bridge = (
+            "上一场留下的沉默还没散，队列已经继续往前走。"
+            if continuity_mode == "retain"
+            else "上一场留下的后果已经换了地方继续发作。"
+        )
+    else:
+        bridge = ""
+    environment = build_location_detail(location)
+    opening_text = (
+        f"{time_marker}，{location}。{bridge}"
+        "系统提示：‘逾期、违约与异常标签不会因为换了地点就被撤销。’ "
+        f"{environment}"
+    )
+    micro_expression = build_location_micro_expression(location)
+    return opening_text, micro_expression
+
+
+def build_location_detail(location: str) -> str:
+    if "公寓" in location or "疗养仓" in location:
+        return "走廊尽头的氧雾机隔几秒喘一下，像一台不太愿意继续工作的肺。"
+    if "回收站" in location or "黑市" in location:
+        return "顶棚滴下来的冷凝水敲在铁桶边沿，像有人在暗处替系统计时。"
+    return "审核台边上搁着一只杯沿带细裂的保温杯，没人提它。"
+
+
+def build_location_micro_expression(location: str) -> str:
+    if "公寓" in location or "疗养仓" in location:
+        return "狭窄走廊里的感应灯亮一阵灭一阵，门缝里漏出的氧雾在脚边拖成一层淡白。"
+    if "回收站" in location or "黑市" in location:
+        return "铁门后的排风扇转得忽快忽慢，潮气贴着墙皮往下流。"
+    return "采样站天花板的旧喇叭发出轻微电流噪音，玻璃门上的雾气迟迟不散。"
 
 
 def director_setup(state: SceneState) -> dict:
     if state["director_log"]:
         return {}
 
-    opening_text = (
-        f"{DIRECTOR_OPENING_BROADCAST} "
-        f"审核台边上搁着一只杯沿带细裂的保温杯，没人提它。"
-    )
+    opening_text, micro_expression = build_opening_broadcast(state)
     opening_record = PublicTurnRecord(
         speaker="Director",
         round_index=0,
-        micro_expression="采样站天花板的旧喇叭发出轻微电流噪音，玻璃门上的雾气迟迟不散。",
+        micro_expression=micro_expression,
         action_and_dialogue=opening_text,
     ).model_dump()
     director_event = DirectorSceneEvent(
@@ -196,6 +245,23 @@ def make_symbolism_node(engine: SymbolismEngine):
 def make_writer_node(writer: SceneWriter):
     def node(state: SceneState) -> dict:
         return write_chapter(state=state, writer=writer)
+
+    return node
+
+
+def make_continuity_node(engine: ContinuityEngine):
+    def node(state: SceneState) -> dict:
+        scene_data = state["scene_data"] or build_scene_data(state)
+        summary = engine.summarize(scene_data=scene_data, state=state)
+        dumped = summary.model_dump()
+        return {
+            "continuity_summary": dumped,
+            "chapter_history": state["chapter_history"] + [dumped],
+            "carryover_threads": dumped["carryover_threads"],
+            "last_scene_summary": dumped["chapter_summary"],
+            "current_location": dumped["ending_location"],
+            "time_marker": dumped["ending_time_marker"],
+        }
 
     return node
 

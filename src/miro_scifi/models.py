@@ -55,6 +55,10 @@ class ShowrunnerPlan(BaseModel):
     core_conflict: str
     hidden_foreshadowing: str
     tone_guardrail: str
+    continuity_mode: Literal["retain", "shift"]
+    continuity_rationale: str
+    opening_time_marker: str
+    opening_location: str
     forced_beats: list[BeatItem]
 
 
@@ -70,6 +74,21 @@ class SymbolismPlan(BaseModel):
     imagery_cues: list[SymbolismCue]
     gesture_rewrites: list[str]
     forbidden_explicit_phrases: list[str]
+
+
+class ContinuitySummary(BaseModel):
+    scene_brief: str
+    chapter_summary: str
+    opening_time_marker: str
+    opening_location: str
+    ending_time_marker: str
+    ending_location: str
+    continuity_decision: Literal["retain", "shift"]
+    continuity_reason: str
+    irreversible_change: str
+    carryover_threads: list[str]
+    resolved_threads: list[str]
+    next_scene_pressure: str
 
 
 class PublicTurnRecord(BaseModel):
@@ -112,6 +131,12 @@ class SceneState(TypedDict):
     scene_log: list[dict[str, Any]]
     director_log: list[str]
     symbolism_plan: dict[str, Any]
+    continuity_summary: dict[str, Any]
+    chapter_history: list[dict[str, Any]]
+    carryover_threads: list[str]
+    last_scene_summary: str
+    current_location: str
+    time_marker: str
     subtext_guide: str
     scene_data: str
     chapter_text: str

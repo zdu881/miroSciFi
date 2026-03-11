@@ -96,7 +96,9 @@ def build_showrunner_system_prompt() -> str:
 2. 必须存在零和压力、资源剥夺和不可逆的屈辱成本。
 3. 禁止给出温情和解或道德升华式结局。
 4. 每一轮都要设计一个强制性外部压力，把角色拉回冲突主线。
-5. 输出必须严格结构化。
+5. 你必须明确决定本场与上一场的连续性：continuity_mode 只能是 retain 或 shift。
+6. 时间和空间既可以保留，也可以跳转，但 opening_time_marker 与 opening_location 必须写得具体、可见、可执行。
+7. 输出必须严格结构化。
 """.strip()
 
 
@@ -106,6 +108,7 @@ def build_showrunner_user_prompt(
     world_context: str,
     characters: list[CharacterProfile],
     max_turns: int,
+    state: SceneState,
 ) -> str:
     cast = "\n".join(
         (
@@ -124,12 +127,31 @@ def build_showrunner_user_prompt(
 角色表：
 {cast}
 
+上一场摘要：
+{state.get('last_scene_summary') or '（这是小说开场，暂无上一场）'}
+
+累计章节历史：
+{format_chapter_history(state.get('chapter_history', []))}
+
+当前待延续的线头：
+{format_carryover_threads(state.get('carryover_threads', []))}
+
+上一场结束时的时空坐标：
+- 时间：{state.get('time_marker') or '（尚未定义）'}
+- 地点：{state.get('current_location') or '（尚未定义）'}
+
 请输出一个 {max_turns} 轮场景的节拍表，至少包含：
 - 这个场景真正的文学目的。
 - 一个不可和解的核心冲突。
 - 一个带羞辱或损耗性质的目标结局。
 - 一个埋入场景中的隐藏伏笔。
 - 每轮一个不可抗力事件，用来逼迫角色继续零和博弈。
+- continuity_mode：如果本场与上一场在同一时间流和同一空间里接续，就写 retain；如果发生了明确跳时或换场，就写 shift。
+- continuity_rationale：解释为什么保留或跳转。
+- opening_time_marker：本场开场的明确时间标记，不能空泛。
+- opening_location：本场开场的明确地点。
+
+注意：不要无意识重启故事。即使你选择 shift，也必须让新场景承接上一场留下的成本、线头或后果。
 """.strip()
 
 
@@ -171,8 +193,23 @@ def build_character_user_prompt(profile: CharacterProfile, state: SceneState) ->
     relationships = format_relationship_view(state["dynamic_relationships"], profile.name)
     resources = format_resource_pool(state["resource_state"][profile.name])
     anchors = format_core_anchor(state["core_anchors"][profile.name])
+    continuity_mode = state.get("showrunner_plan", {}).get("continuity_mode", "retain")
     return f"""
 当前轮次：第 {current_round} 轮 / 共 {state['max_turns']} 轮
+
+当前开场坐标：
+- 时间：{state.get('time_marker') or '（未定义）'}
+- 地点：{state.get('current_location') or '（未定义）'}
+- 连续性：{continuity_mode}
+
+上一场摘要：
+{state.get('last_scene_summary') or '（这是起始场景）'}
+
+仍在压着你的线头：
+{format_carryover_threads(state.get('carryover_threads', []))}
+
+累计章节历史压缩：
+{format_chapter_history(state.get('chapter_history', []), limit=2)}
 
 场景节拍表：
 {showrunner_plan}
@@ -201,6 +238,7 @@ def build_character_user_prompt(profile: CharacterProfile, state: SceneState) ->
 3. emotional_shift 只写身体和情绪的即时变化，不写计划书。
 4. hidden_agenda 必须指向生存、控制、摆脱羞辱或规避惩罚。
 5. action_and_dialogue 要把动作和说话写在一起，不要拆开。
+6. 如果这是 retain，本轮默认承接上一场残留的空气、姿势、伤口和未说完的话；如果是 shift，也必须把上一场留下的后果带在身上。
 """.strip()
 
 
@@ -235,6 +273,50 @@ def build_symbolism_user_prompt(scene_data: str, showrunner_plan: dict[str, obje
 """.strip()
 
 
+def build_continuity_system_prompt() -> str:
+    return """
+你是这个长篇项目的 Continuity Editor（连续性编辑）。
+你的职责是为每一场生成压缩但精确的跨场摘要，确保故事不会在下一场无意识重启。
+
+规则：
+1. 明确区分 retain 与 shift。retain 表示下一场可以保留当前时空流；shift 表示必须明确跳时或换场。
+2. 你必须指出本场产生的不可逆变化，以及哪些线头会带入下一场。
+3. 摘要要短、硬、可执行，不写抒情评论。
+4. 章节摘要必须写清楚谁失去了什么，谁保住了什么，代价是什么。
+5. 输出必须严格结构化。
+""".strip()
+
+
+def build_continuity_user_prompt(*, scene_data: str, state: SceneState) -> str:
+    return f"""
+请根据以下信息，为当前场景生成跨场连续性摘要。
+
+[上一场摘要]
+{state.get('last_scene_summary') or '（这是第一场）'}
+
+[已有章节历史]
+{format_chapter_history(state.get('chapter_history', []))}
+
+[开场坐标]
+- 时间：{state.get('time_marker') or '（未定义）'}
+- 地点：{state.get('current_location') or '（未定义）'}
+
+[上一场遗留线头]
+{format_carryover_threads(state.get('carryover_threads', []))}
+
+[当前场景资料]
+{scene_data}
+
+要求：
+1. chapter_summary 要写成供下一场直接继承的短摘要，不是复述流水账。
+2. ending_time_marker 与 ending_location 必须是本场结束时角色真正停留的位置和时间点。
+3. continuity_decision 用来提示下一场更自然地 retain 还是 shift；但无论选择什么，都不能抹掉后果。
+4. carryover_threads 只保留 2 到 4 条最重要、最有压迫感的未决线头。
+5. resolved_threads 只写本场确实完成或断裂的事项。
+6. irreversible_change 必须可见、不可轻易撤销。
+""".strip()
+
+
 def build_writer_user_prompt(
     scene_data: str,
     subtext_guide: str,
@@ -254,7 +336,8 @@ def build_writer_user_prompt(
 2. 必须通过环境、物件、动作、停顿、职业流程和身体反应来显露心理与阶层关系。
 3. 不要解释世界观，不要总结主题，不要写 AI 式结语。
 4. 保持冷静、克制和异化感，让角色被制度和资源压力一步步压窄。
-5. 只输出正文，不写标题和说明。
+5. 如果资料里包含上一场摘要、累计历史或遗留线头，必须把它们视为同一部长篇中的连续章节，而不是重写开头。
+6. 只输出正文，不写标题和说明。
 """.strip()
 
 
@@ -320,6 +403,41 @@ def format_relationship_snapshot(dynamic_relationships: dict[str, dict[str, str]
     return "\n".join(lines) if lines else "（暂无关系变化）"
 
 
+def format_chapter_history(chapter_history: list[dict[str, object]], limit: int = 3) -> str:
+    if not chapter_history:
+        return "（暂无累计历史）"
+    selected = chapter_history[-limit:] if limit > 0 else chapter_history
+    lines: list[str] = []
+    start_index = len(chapter_history) - len(selected) + 1
+    for offset, item in enumerate(selected, start=start_index):
+        lines.append(
+            f"- 第 {offset} 场｜开场：{item.get('opening_time_marker', '未知时间')} @ {item.get('opening_location', '未知地点')}｜"
+            f"结尾：{item.get('ending_time_marker', '未知时间')} @ {item.get('ending_location', '未知地点')}｜"
+            f"摘要：{item.get('chapter_summary', '（无）')}"
+        )
+    return "\n".join(lines)
+
+
+def format_carryover_threads(threads: list[str]) -> str:
+    if not threads:
+        return "（暂无遗留线头）"
+    return "\n".join(f"- {item}" for item in threads)
+
+
+def format_continuity_summary(summary: dict[str, object]) -> str:
+    if not summary:
+        return "（暂无连续性摘要）"
+    return (
+        f"- 场景摘要：{summary.get('chapter_summary', '（无）')}\n"
+        f"- 开场坐标：{summary.get('opening_time_marker', '未知时间')} @ {summary.get('opening_location', '未知地点')}\n"
+        f"- 结尾坐标：{summary.get('ending_time_marker', '未知时间')} @ {summary.get('ending_location', '未知地点')}\n"
+        f"- 连续性建议：{summary.get('continuity_decision', 'retain')}｜{summary.get('continuity_reason', '（无）')}\n"
+        f"- 不可逆变化：{summary.get('irreversible_change', '（无）')}\n"
+        f"- 下一场压力：{summary.get('next_scene_pressure', '（无）')}\n"
+        f"- 遗留线头：\n{format_carryover_threads(summary.get('carryover_threads', []))}"
+    )
+
+
 def format_showrunner_plan(plan: dict[str, object]) -> str:
     if not plan:
         return "（节拍表尚未生成）"
@@ -338,6 +456,8 @@ def format_showrunner_plan(plan: dict[str, object]) -> str:
         f"- 核心冲突：{plan['core_conflict']}\n"
         f"- 隐藏伏笔：{plan['hidden_foreshadowing']}\n"
         f"- 语气护栏：{plan['tone_guardrail']}\n"
+        f"- 连续性模式：{plan.get('continuity_mode', 'retain')}｜{plan.get('continuity_rationale', '（无）')}\n"
+        f"- 开场坐标：{plan.get('opening_time_marker', '未知时间')} @ {plan.get('opening_location', '未知地点')}\n"
         f"- 强制节拍：\n{beat_block}"
     )
 

@@ -11,9 +11,11 @@ from dotenv import load_dotenv
 
 from .engine import (
     LiveCharacterEngine,
+    LiveContinuityEngine,
     LiveShowrunnerEngine,
     LiveSymbolismEngine,
     MockCharacterEngine,
+    MockContinuityEngine,
     MockShowrunnerEngine,
     MockSymbolismEngine,
 )
@@ -199,8 +201,83 @@ def idea_cry_guarantee() -> NovelIdea:
     )
 
 
+def idea_dream_lease() -> NovelIdea:
+    return NovelIdea(
+        key="dream_lease",
+        title="《梦层续租》",
+        logline=(
+            "在雾港，完整深睡期被平台当作城市预测系统的夜间基础设施出租。为了给母亲续上疗养仓的夜间供氧，"
+            "阮宁不得不把自己最后还能连续做完的梦抵押出去；裴崧则负责判定她还剩多少睡眠完整性可以被合法切走。"
+        ),
+        themes=[
+            "睡眠权如何被拆成可租赁的基础设施",
+            "疲惫社会里身体连续性的金融化",
+            "夜间劳动与家庭照护被同一套系统计息",
+            "人为了续命，如何一步步失去做完整梦的资格",
+        ],
+        tonal_guardrail=(
+            "保持冷、窄、失眠般的压迫感。不要把它写成赛博奇观或逆袭故事，"
+            "只写夜里那些不得不签字、不得不熬着的人。"
+        ),
+        world_context=(
+            f"{WORLD_CONTEXT_PROMPT}\n\n"
+            "新增制度背景：雾港开始推行‘梦层续租协议’。平台把居民未受干扰的深度睡眠切片视为高价值基础设施，"
+            "可租给城市预测模型、安抚系统和高端陪伴服务。底层居民可以抵押连续睡眠权、特定梦境层与醒来后的完整记忆，"
+            "来换取氧雾、电力、疗养仓夜间供能和债务展期。违约者会被强制接入碎梦播报，失去在公共夜间休息区完整睡眠的资格。"
+        ),
+        scene_outlines=[
+            SceneOutline(
+                title="第一章：续租窗口",
+                brief=(
+                    "凌晨三点五十七分，阮宁来到第七码头的夜间睡眠续租窗口，想用自己最后一段完整深睡期给母亲续上疗养仓夜间供氧。"
+                    "裴崧负责审核她的梦层纯度与违约风险。场景必须建立：睡眠也能被租、制度如何定价疲惫、以及两人之间冷硬的职业关系。"
+                ),
+                turns=1,
+                chapter_target="2200 字左右",
+            ),
+            SceneOutline(
+                title="第二章：电梯井低鸣",
+                brief=(
+                    "阮宁离开窗口后没有真正脱身，她在蜂巢公寓电梯井口接到裴崧发来的远程追保催告：若不补交梦层稳定性证明，"
+                    "疗养仓夜间供氧仍会在天亮前降级。这一章要尽量保留同一夜的时间流与上一场未散的疲惫。"
+                ),
+                turns=1,
+                chapter_target="2200 字左右",
+            ),
+            SceneOutline(
+                title="第三章：拆梦工位",
+                brief=(
+                    "为了补足差额，阮宁在下一夜进入下城的拆梦工位，把一段仍能完整回到父亲事故前夕的梦切给黑市中介。"
+                    "裴崧奉命抽查，核实她是否私自保留了未备案的深睡记忆。剧情应从上一夜 shift 到更脏的地下链条。"
+                ),
+                turns=1,
+                chapter_target="2200 字左右",
+            ),
+            SceneOutline(
+                title="第四章：白昼回访席",
+                brief=(
+                    "天亮后的治理局回访席里，阮宁因为连续失眠出现梦游性断片，却还要接受裴崧的人工问询。"
+                    "他们不再像第一次见面那样陌生，但这种熟悉只意味着彼此更懂对方会在哪一格表单上施压。"
+                ),
+                turns=1,
+                chapter_target="2200 字左右",
+            ),
+            SceneOutline(
+                title="第五章：关灯协议",
+                brief=(
+                    "最终签注前夜，阮宁只剩最后一项可抵押资产：母亲死后她还能做一次完整梦的权利。"
+                    "裴崧要在系统追责前完成签注。结尾必须冷：疗养仓和供氧可以暂时续上，"
+                    "但阮宁在制度层面失去连续做梦的资格；裴崧也只是把那只裂了口的保温杯重新放回工位。"
+                ),
+                turns=1,
+                chapter_target="2400 字左右",
+            ),
+        ],
+    )
+
+
 def build_idea_registry() -> dict[str, NovelIdea]:
-    ideas = [idea_echo_tax(), idea_cry_guarantee()]
+    ideas = [idea_echo_tax(), idea_cry_guarantee(), idea_dream_lease()]
     return {idea.key: idea for idea in ideas}
 
 
@@ -213,6 +290,11 @@ def build_parser() -> argparse.ArgumentParser:
         description="Run a longform social sci-fi novel from multi-scene LangGraph scenes."
     )
     parser.add_argument("--mode", choices=["live", "mock"], default="live")
+    parser.add_argument(
+        "--fast-lane",
+        action="store_true",
+        help="live 模式下只保留 Character + Writer 为真实模型，Showrunner / Symbolism / Continuity 使用内置快速策略。",
+    )
     parser.add_argument(
         "--idea",
         default="cry_guarantee",
@@ -299,6 +381,17 @@ def maybe_load_siliconflow_env(env_file: Path | None) -> None:
 
 def build_runtime(args: argparse.Namespace) -> dict[str, Any]:
     if args.mode == "live":
+        if args.fast_lane:
+            return {
+                "character_engine": MockCharacterEngine(),
+                "showrunner_engine": MockShowrunnerEngine(),
+                "symbolism_engine": MockSymbolismEngine(),
+                "continuity_engine": MockContinuityEngine(),
+                "writer": LiveSceneWriter(
+                    model=args.writer_model,
+                    timeout=240,
+                ),
+            }
         return {
             "character_engine": LiveCharacterEngine(
                 model=args.character_model,
@@ -312,6 +405,10 @@ def build_runtime(args: argparse.Namespace) -> dict[str, Any]:
                 model=args.symbolism_model or args.character_model,
                 timeout=180,
             ),
+            "continuity_engine": LiveContinuityEngine(
+                model=args.showrunner_model or args.character_model,
+                timeout=180,
+            ),
             "writer": LiveSceneWriter(
                 model=args.writer_model,
                 timeout=240,
@@ -321,6 +418,7 @@ def build_runtime(args: argparse.Namespace) -> dict[str, Any]:
         "character_engine": MockCharacterEngine(),
         "showrunner_engine": MockShowrunnerEngine(),
         "symbolism_engine": MockSymbolismEngine(),
+        "continuity_engine": MockContinuityEngine(),
         "writer": MockSceneWriter(),
     }
 
@@ -334,6 +432,21 @@ def seed_state_from_previous(
     state["resource_state"] = previous["resource_state"]
     state["dynamic_relationships"] = previous["dynamic_relationships"]
     state["core_anchors"] = previous["core_anchors"]
+    state["continuity_summary"] = previous.get("continuity_summary", {})
+    state["chapter_history"] = list(previous.get("chapter_history", []))
+    state["carryover_threads"] = list(previous.get("carryover_threads", []))
+    state["last_scene_summary"] = (
+        previous.get("last_scene_summary")
+        or previous.get("continuity_summary", {}).get("chapter_summary", "")
+    )
+    state["current_location"] = (
+        previous.get("current_location")
+        or previous.get("continuity_summary", {}).get("ending_location", "")
+    )
+    state["time_marker"] = (
+        previous.get("time_marker")
+        or previous.get("continuity_summary", {}).get("ending_time_marker", "")
+    )
     return state
 
 
@@ -377,6 +490,7 @@ def run_novel(args: argparse.Namespace) -> tuple[NovelIdea, list[dict[str, Any]]
         character_engine=runtime["character_engine"],
         showrunner_engine=runtime["showrunner_engine"],
         symbolism_engine=runtime["symbolism_engine"],
+        continuity_engine=runtime["continuity_engine"],
         writer=runtime["writer"],
     )
 

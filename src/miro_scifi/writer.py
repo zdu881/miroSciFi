@@ -11,6 +11,8 @@ from .models import SceneState
 from .prompts import (
     WRITER_SYSTEM_PROMPT,
     build_writer_user_prompt,
+    format_chapter_history,
+    format_carryover_threads,
     format_relationship_snapshot,
     format_resource_snapshot,
     format_scene_log,
@@ -97,6 +99,11 @@ class MockSceneWriter:
 def build_scene_data(state: SceneState) -> str:
     return (
         f"[世界观]\n{state['world_context']}\n\n"
+        f"[跨场连续性]\n"
+        f"- 上一场摘要：{state.get('last_scene_summary') or '（这是小说开场）'}\n"
+        f"- 当前开场坐标：{state.get('time_marker') or '未知时间'} @ {state.get('current_location') or '未知地点'}\n"
+        f"- 累计章节历史：\n{format_chapter_history(state.get('chapter_history', []))}\n"
+        f"- 仍在发作的线头：\n{format_carryover_threads(state.get('carryover_threads', []))}\n\n"
         f"[场景简报]\n{state['scene_brief']}\n\n"
         f"[Showrunner 节拍表]\n{format_showrunner_plan(state['showrunner_plan'])}\n\n"
         f"[角色关系快照]\n{format_relationship_snapshot(state['dynamic_relationships'])}\n\n"
